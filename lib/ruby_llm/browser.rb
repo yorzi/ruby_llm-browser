@@ -20,6 +20,12 @@ require_relative "browser/configuration"
 require_relative "browser/capabilities"
 require_relative "browser/url_guard"
 require_relative "browser/policy"
+require_relative "browser/operation"
+require_relative "browser/operation_store"
+require_relative "browser/in_memory_operation_store"
+require_relative "browser/approval"
+require_relative "browser/approval_store"
+require_relative "browser/in_memory_approval_store"
 
 module RubyLLM
   # Policy-bound browser tools for RubyLLM agents.
