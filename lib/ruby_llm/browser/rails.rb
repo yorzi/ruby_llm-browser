@@ -26,6 +26,8 @@ require_relative "rails/operation_record"
 require_relative "rails/approval_record"
 require_relative "rails/active_record_operation_store"
 require_relative "rails/active_record_approval_store"
+require_relative "rails/operation_job"
+require_relative "rails/reaper"
 
 module RubyLLM
   module Browser
