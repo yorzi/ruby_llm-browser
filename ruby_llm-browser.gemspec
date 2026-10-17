@@ -22,13 +22,13 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 3.2")
 
-  spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files = Dir.glob("lib/**/*") + %w[README.md CHANGELOG.md LICENSE.txt NOTICE.md SECURITY.md]
+  spec.files = Dir.glob("lib/**/*").select { |file| File.file?(file) } +
+               %w[README.md CHANGELOG.md LICENSE.txt NOTICE.md SECURITY.md]
   spec.require_paths = [ "lib" ]
 
   # RubyLLM owns the Tool and chat execution loop; this Gem only adds browser tools.

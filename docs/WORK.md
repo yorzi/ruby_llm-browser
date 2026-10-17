@@ -22,7 +22,7 @@ simple: `NOT RUN` is written as `NOT RUN`, never as `PASS`.
 | S1 | Read-only `Inspect`/`Extract` core with fake backend, policy, bounded results | DONE |
 | S2 | Stagehand adapter, durable operation store, quotas, TTL/reaper, reconciliation | DONE (offline: adapter + AR durable store/reaper; live remote NOT RUN) |
 | S3 | Opt-in `Act` with one-use approvals, Rails 8 jobs, cancellation, negative tests | DONE (offline: Gem-core Act + approvals + Rails Active Job/reaper; live NOT RUN) |
-| S4 | Full matrix, clean install, security/compat/license docs, human-approved release | PARTIAL (Gem builds; clean-install + release checks pending) |
+| S4 | Full matrix, clean install, security/compat/license docs, human-approved release | PARTIAL (Gem builds and clean-installs; compatibility matrix + public release pending) |
 
 ## Functional-requirement evidence
 
@@ -39,10 +39,31 @@ proves remote browser egress and no live Stagehand call has been run.
 | FR-05 approved Act | `spec/ruby_llm/browser/act_spec.rb`, `spec/ruby_llm/browser/engine_spec.rb` | same | PASS (fake); bare `Chat#approve` dispatches nothing | 2026-10-17 |
 | FR-06 Rails jobs | `spec/rails/operation_job_spec.rb`, `spec/rails/reaper_spec.rb`, `spec/rails/active_record_operation_store_spec.rb`, `spec/rails/active_record_approval_store_spec.rb` | same (wrong actor, fenced-out worker, cancel-mid-session, cleanup_pending visible) | PASS (fake backend + in-memory SQLite) | 2026-10-17 |
 | FR-07 failure/budget/audit | `spec/ruby_llm/browser/engine_spec.rb` (budget, redaction), `spec/ruby_llm/browser/stagehand_backend_spec.rb` | `spec/ruby_llm/browser/stagehand_backend_spec.rb` (env override, SDK retry off, `cdp_url`), `spec/ruby_llm/browser/doctor_spec.rb` | PASS (offline); live Stagehand NOT RUN | 2026-10-17 |
-| FR-08 full delivery | `gem build` + CI | same | NOT RUN (build next) | — |
+| FR-08 full delivery | `gem build` + clean-install require (log below) | `spec/integration/require_spec.rb`, `spec/integration/rails_require_spec.rb` | PASS (gem 0.1.0 builds; clean install loads core with no framework and the Rails adapter on demand) | 2026-10-17 |
 
 Run command for every row: `bundle exec rspec` (and `bundle exec rubocop`). Environment is
 the pinned local table above.
+
+### FR-08 delivery evidence (2026-10-17)
+
+```text
+$ gem build ruby_llm-browser.gemspec
+  Successfully built RubyGem
+  Name: ruby_llm-browser
+  Version: 0.1.0
+  File: ruby_llm-browser-0.1.0.gem
+
+# Clean install into an isolated GEM_HOME, then require from the built gem:
+$ gem install --local ./ruby_llm-browser-0.1.0.gem --install-dir "$PKG" --ignore-dependencies
+$ GEM_HOME="$PKG" GEM_PATH="$PKG:$(gem env gempath)" ruby -e 'require "ruby_llm/browser"'
+framework_loaded=[]        # no railties / active_record / active_job on the core path
+core=0.1.0
+$ ... ruby -e 'require "ruby_llm/browser/rails"'
+rails=RubyLLM::Browser::Rails::OperationJob
+```
+
+The packaged gem contains the plain-Ruby core, the opt-in Rails adapter and the install
+generator. Public RubyGems publication stays blocked on BR-03 (name/license clearance).
 
 ## Commit log
 
