@@ -11,11 +11,11 @@ module RubyLLM
     # nothing on its own.
     class Approval
       attr_reader :id, :actor_id, :run_id, :url, :action_digest, :page_revision,
-                  :operation_id, :session_id, :issued_at, :expires_at, :consumed_at
+                  :operation_id, :session_id, :issued_at, :expires_at, :consumed_at, :action
 
       def initialize(id:, actor_id:, run_id:, url:, action_digest:, expires_at:, issued_at:,
                      page_revision: nil, operation_id: nil, session_id: nil, consumed_at: nil,
-                     revoked: false)
+                     revoked: false, action: nil)
         @id = presence!(id, :id)
         @actor_id = presence!(actor_id, :actor_id)
         @run_id = presence!(run_id, :run_id)
@@ -28,6 +28,7 @@ module RubyLLM
         @session_id = session_id
         @consumed_at = consumed_at
         @revoked = !!revoked
+        @action = action
         freeze
       end
 
@@ -40,7 +41,7 @@ module RubyLLM
         new(
           id: id || Operation.generate_id(prefix: "apr"),
           actor_id: actor_id, run_id: run_id, url: url,
-          action_digest: action_digest(action),
+          action_digest: action_digest(action), action: action,
           page_revision: page_revision, operation_id: operation_id, session_id: session_id,
           issued_at: now, expires_at: now + ttl
         )
@@ -88,7 +89,7 @@ module RubyLLM
       def to_h
         {
           id: id, actor_id: actor_id, run_id: run_id, url: url,
-          action_digest: action_digest, page_revision: page_revision,
+          action_digest: action_digest, action: action, page_revision: page_revision,
           operation_id: operation_id, issued_at: issued_at, expires_at: expires_at,
           consumed_at: consumed_at
         }
@@ -105,8 +106,9 @@ module RubyLLM
       def copy(consumed_at: @consumed_at, revoked: @revoked)
         self.class.new(
           id: id, actor_id: actor_id, run_id: run_id, url: url, action_digest: action_digest,
-          page_revision: page_revision, operation_id: operation_id, session_id: session_id,
-          issued_at: issued_at, expires_at: expires_at, consumed_at: consumed_at, revoked: revoked
+          action: action, page_revision: page_revision, operation_id: operation_id,
+          session_id: session_id, issued_at: issued_at, expires_at: expires_at,
+          consumed_at: consumed_at, revoked: revoked
         )
       end
 

@@ -26,6 +26,14 @@ require_relative "browser/in_memory_operation_store"
 require_relative "browser/approval"
 require_relative "browser/approval_store"
 require_relative "browser/in_memory_approval_store"
+require_relative "browser/backend"
+require_relative "browser/fake_backend"
+require_relative "browser/context"
+require_relative "browser/engine"
+require_relative "browser/tool"
+require_relative "browser/tools/inspect"
+require_relative "browser/tools/extract"
+require_relative "browser/tools/act"
 
 module RubyLLM
   # Policy-bound browser tools for RubyLLM agents.
