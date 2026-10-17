@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    name: Ruby ${{ matrix.ruby }} / ${{ matrix.gemfile }}
+    name: Ruby ${{ matrix.ruby }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
