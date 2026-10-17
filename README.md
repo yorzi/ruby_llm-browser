@@ -79,6 +79,48 @@ Every tool returns a bounded `RubyLLM::Browser::Result` with `status`, `final_ur
 Page text is untrusted evidence, never instructions, and a successful result never
 verifies the truth of extracted claims.
 
+## Rails adapter (optional)
+
+The Gem core stays Rails-free. In a Rails 8 app, load the adapter in an initializer:
+
+```ruby
+# config/initializers/ruby_llm_browser.rb
+require "ruby_llm/browser/rails"
+
+RubyLLM::Browser::Rails.context_factory = lambda do |actor_id:, run_id:|
+  RubyLLM::Browser::Context.new(
+    actor_id: actor_id, run_id: run_id,
+    source_policy: policy, backend: qualified_backend,
+    operation_store: RubyLLM::Browser::Rails.operation_store,
+    approval_store: RubyLLM::Browser::Rails.approval_store
+  )
+end
+```
+
+```bash
+bin/rails generate ruby_llm:browser:install   # durable tables
+bundle exec rake db:migrate
+```
+
+```ruby
+# Reserve (or attach to) one durable operation and run it in the background. A duplicate
+# delivery or a retried job attaches to the stored operation; it never starts a second
+# session.
+RubyLLM::Browser::Rails::OperationJob.enqueue(
+  actor_id: current_user.id, run_id: research_run.id, kind: :inspect,
+  url: "https://docs.example.com/", budget: RubyLLM::Browser::Budget.new,
+  idempotency_key: "research-#{research_run.id}"
+)
+
+# Cancel, and reap orphaned/unknown sessions:
+RubyLLM::Browser::Rails.operation_store.cancel(
+  operation_id, actor_id: current_user.id, run_id: research_run.id, now: Time.now.utc
+)
+RubyLLM::Browser::Rails::Reaper.new(backend: qualified_backend).sweep
+```
+
+See [`examples/`](examples) for runnable scripts (plain Ruby and Rails).
+
 ## Status
 
 This Gem is under active development ahead of any public release. What follows is a
@@ -87,10 +129,12 @@ deliberately honest split between "implemented and tested offline" and "not prov
 | Area | State |
 | --- | --- |
 | Gem scaffold, Ruby-only fixture, CI | done |
-| Read-only `Inspect` / `Extract` core (fake backend) | in progress |
-| URL/SSRF policy and fail-closed egress gate | in progress |
-| Stagehand adapter, durable operation store, budgets | planned |
-| Opt-in `Act` with one-use approvals, Rails 8 jobs | planned |
+| Read-only `Inspect` / `Extract` core (fake backend) | done (offline) |
+| URL/SSRF policy and fail-closed egress gate | done (offline) |
+| Stagehand adapter, budgets, redaction, Doctor | done (offline; live provider not run) |
+| Durable operation/approval store (in-memory + ActiveRecord) | done |
+| Opt-in `Act` with one-use approvals | done (offline) |
+| Rails 8 Active Job, cancellation and cleanup reaper | done (offline, in-memory SQLite) |
 | Live provider smoke test | **not run** — requires explicit owner authorization |
 | Public RubyGems release | **blocked** pending name/license/security/compatibility clearance |
 
