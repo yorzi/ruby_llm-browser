@@ -284,4 +284,57 @@ RSpec.describe RubyLLM::Browser::Engine do
       expect(backend.call_count(:act)).to eq(0)
     end
   end
+
+  describe "caller-provided operation" do
+    def reserve_operation(id:, actor_id: "actor-1", run_id: "run-1")
+      RubyLLM::Browser::Operation.new(
+        id: id, actor_id: actor_id, run_id: run_id, budget: context.budget,
+        state: :reserved, created_at: fixed_time, updated_at: fixed_time
+      )
+    end
+
+    it "drives an operation reserved by the caller instead of reserving a new one" do
+      store.reserve(reserve_operation(id: "op-caller"))
+      leased = store.lease("op-caller", actor_id: "actor-1", run_id: "run-1", now: fixed_time)
+
+      result = engine.inspect(url: url, operation: leased)
+
+      expect(result.status).to eq(:ok)
+      expect(result.operation_id).to eq("op-caller")
+      expect(store.all.size).to eq(1)
+      expect(store.fetch("op-caller").state).to eq(:closed)
+    end
+
+    it "refuses an operation bound to a different actor before any session" do
+      foreign = reserve_operation(id: "op-foreign", actor_id: "someone-else")
+      store.reserve(foreign)
+
+      expect { engine.inspect(url: url, operation: foreign) }
+        .to raise_error(RubyLLM::Browser::NotAuthorized, /different actor/)
+      expect(backend.call_count(:start)).to eq(0)
+    end
+
+    it "refuses a caller operation whose budget differs from the context" do
+      mismatched = RubyLLM::Browser::Operation.new(
+        id: "op-budget", actor_id: "actor-1", run_id: "run-1",
+        budget: RubyLLM::Browser::Budget.new(max_steps: 99),
+        state: :reserved, created_at: fixed_time, updated_at: fixed_time
+      )
+      store.reserve(mismatched)
+
+      expect { engine.inspect(url: url, operation: mismatched) }
+        .to raise_error(RubyLLM::Browser::InvalidInput, /budget/)
+      expect(backend.call_count(:start)).to eq(0)
+    end
+
+    it "aborts before starting a session when a newer worker holds the lease" do
+      store.reserve(reserve_operation(id: "op-fenced"))
+      first = store.lease("op-fenced", actor_id: "actor-1", run_id: "run-1", now: fixed_time)
+      store.lease("op-fenced", actor_id: "actor-1", run_id: "run-1", now: fixed_time)
+
+      expect { engine.inspect(url: url, operation: first) }
+        .to raise_error(RubyLLM::Browser::InvalidInput, /stale/)
+      expect(backend.call_count(:start)).to eq(0)
+    end
+  end
 end

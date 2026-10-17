@@ -22,9 +22,14 @@ module RubyLLM
       end
 
       # Read-only observation of an allowlisted page.
-      def inspect(url:, instruction: nil, max_bytes: nil)
+      #
+      # @param operation [Operation, nil] a caller-reserved, caller-leased operation to
+      #   drive. Used by the optional Rails job so a duplicate delivery attaches to the
+      #   stored operation instead of reserving a second one. When nil the engine
+      #   reserves its own operation.
+      def inspect(url:, instruction: nil, max_bytes: nil, operation: nil)
         max_bytes = optional_positive_integer!(max_bytes, :max_bytes)
-        execute(url: url) do |attempt|
+        execute(url: url, operation: operation) do |attempt|
           attempt.operation = next_step(attempt.operation)
           observed = backend.observe(attempt.session, instruction: instruction,
                                      operation: attempt.operation, now: now)
@@ -37,10 +42,10 @@ module RubyLLM
       end
 
       # Schema-bounded extraction from an allowlisted page.
-      def extract(url:, schema:, instruction: nil, max_bytes: nil)
+      def extract(url:, schema:, instruction: nil, max_bytes: nil, operation: nil)
         max_bytes = optional_positive_integer!(max_bytes, :max_bytes)
         validated = policy.authorize_schema!(schema)
-        execute(url: url) do |attempt|
+        execute(url: url, operation: operation) do |attempt|
           attempt.operation = next_step(attempt.operation)
           data = backend.extract(attempt.session, schema: validated, instruction: instruction,
                                  operation: attempt.operation, now: now)
@@ -55,10 +60,10 @@ module RubyLLM
 
       # One human-approved action. Disabled unless an approval store is configured and an
       # active, exactly-bound, single-use approval exists.
-      def act(url:, approval_id:, action:, page_revision: nil)
+      def act(url:, approval_id:, action:, page_revision: nil, operation: nil)
         normalized = policy.authorize_action!(action)
         require_approval_store!
-        execute(url: url) do |attempt|
+        execute(url: url, operation: operation) do |attempt|
           ensure_no_redirect!(attempt)
           attempt.operation = next_step(attempt.operation)
           observed = backend.observe(attempt.session, instruction: nil,
@@ -79,10 +84,10 @@ module RubyLLM
 
       private
 
-      def execute(url:)
+      def execute(url:, operation: nil)
         policy.authorize_egress!(capabilities)
         uri = policy.authorize_destination!(url, actor_id: context.actor_id)
-        operation = reserve(uri)
+        operation = reserve(uri, operation)
         operation = transition(operation, :starting)
 
         session =
@@ -115,13 +120,30 @@ module RubyLLM
         finish(attempt, outcome)
       end
 
-      def reserve(uri)
+      def reserve(uri, provided = nil)
+        return validate_provided!(provided) if provided
+
         now = self.now
         operation = Operation.new(
           id: Operation.generate_id, actor_id: context.actor_id, run_id: context.run_id,
           budget: context.budget, state: :reserved, created_at: now, updated_at: now
         )
         store.reserve(operation)
+      end
+
+      # Accepts a caller-reserved operation only when it belongs to this exact
+      # actor/run and uses this context's budget. A mismatched operation is refused
+      # before any remote call.
+      def validate_provided!(operation)
+        raise InvalidInput, "reserved operation must be a RubyLLM::Browser::Operation" unless operation.is_a?(Operation)
+        unless operation.actor_id == context.actor_id && operation.run_id == context.run_id
+          raise NotAuthorized, "reserved operation belongs to a different actor or run"
+        end
+        unless operation.budget == context.budget
+          raise InvalidInput, "reserved operation budget does not match the context budget"
+        end
+
+        operation
       end
 
       # Records one provider round-trip, refusing once a limit is reached.
@@ -149,7 +171,7 @@ module RubyLLM
           if status == :error
             attempt.operation
           else
-            transition(attempt.operation, status, error_code: error.code)
+            safe_transition(attempt.operation, status, error_code: error.code)
           end
         attempt.operation = recorded
         Result.failure(
@@ -159,7 +181,7 @@ module RubyLLM
       end
 
       def finish(attempt, outcome)
-        closing = transition(attempt.operation, :closing)
+        closing = safe_transition(attempt.operation, :closing)
         closed =
           begin
             backend.end_session(attempt.session, operation: closing, now: now)
@@ -168,10 +190,10 @@ module RubyLLM
           end
 
         if closed
-          transition(closing, :closed)
+          safe_transition(closing, :closed)
           outcome
         else
-          transition(closing, :cleanup_pending, error_code: CleanupPending.code)
+          safe_transition(closing, :cleanup_pending, error_code: CleanupPending.code)
           Result.failure(
             :cleanup_pending, error_code: CleanupPending.code,
             message: "browser session cleanup could not be confirmed",
@@ -229,6 +251,19 @@ module RubyLLM
         raise unless e.message.include?("illegal operation transition")
 
         context.logger&.warn { "browser operation transition skipped: #{e.message}" }
+        operation
+      end
+
+      # A transition that tolerates a store refusing the write.
+      #
+      # When a host cancels an operation or a newer worker takes the lease (fencing),
+      # the store rejects this worker's bookkeeping by design. Cleanup must still be
+      # attempted, so bookkeeping failure is logged and the last known operation is
+      # kept; the durable reaper reconciles the row.
+      def safe_transition(operation, target, session_id: :keep, error_code: nil)
+        transition(operation, target, session_id: session_id, error_code: error_code)
+      rescue Error => e
+        context.logger&.warn { "browser bookkeeping rejected for #{operation.id}: #{e.message}" }
         operation
       end
 
