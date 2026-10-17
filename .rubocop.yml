@@ -26,3 +26,7 @@ RSpec/NestedGroups:
 RSpec/DescribeClass:
   Exclude:
     - "spec/integration/**/*"
+
+RSpec/SpecFilePathFormat:
+  Exclude:
+    - "spec/security/**/*"

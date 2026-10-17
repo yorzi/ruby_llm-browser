@@ -17,6 +17,9 @@ require_relative "browser/redactor"
 require_relative "browser/budget"
 require_relative "browser/result"
 require_relative "browser/configuration"
+require_relative "browser/capabilities"
+require_relative "browser/url_guard"
+require_relative "browser/policy"
 
 module RubyLLM
   # Policy-bound browser tools for RubyLLM agents.
