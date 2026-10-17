@@ -65,6 +65,12 @@ module RubyLLM
       def open_for(_actor_id)
         raise NotImplementedError, "OperationStore#open_for must be implemented"
       end
+
+      # @return [Array<Operation>] every open operation across all actors. Used by the
+      #   cleanup reaper, which is a host-operated, system-wide sweep.
+      def open_operations
+        raise NotImplementedError, "OperationStore#open_operations must be implemented"
+      end
     end
   end
 end

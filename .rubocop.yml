@@ -30,3 +30,4 @@ RSpec/DescribeClass:
 RSpec/SpecFilePathFormat:
   Exclude:
     - "spec/security/**/*"
+    - "spec/rails/**/*"

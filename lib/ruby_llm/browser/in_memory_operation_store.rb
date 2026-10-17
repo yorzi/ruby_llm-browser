@@ -80,6 +80,10 @@ module RubyLLM
         synchronize { @operations.values.select { |operation| operation.actor_id == actor_id && operation.open? } }
       end
 
+      def open_operations
+        synchronize { @operations.values.select(&:open?) }
+      end
+
       # Snapshot for tests and diagnostics.
       def all
         synchronize { @operations.values.dup }
