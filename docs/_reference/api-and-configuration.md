@@ -151,6 +151,12 @@ contract tests. A future live implementation must verify all relevant environmen
 settings, egress across every browser request path, TTL and closure status, and provider
 billing controls before it can advertise support.
 
+## Configuration diagnostics
+
+For diagnostics without network requests, use `Doctor.new(backend:).report`. It
+returns `mode`, `ok`, `summary`, and `checks`. See
+[Checking Configuration]({% link _core_features/diagnostics.md %}) for the backend-specific checks.
+
 ## Dependency security floors
 
 Old Ruby installations can supply vulnerable default gems even when a developer's

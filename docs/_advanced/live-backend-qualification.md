@@ -34,6 +34,11 @@ built-in Stagehand backend as unsupported: `egress_isolation` remains `:unverifi
 the Engine refuses to start a session. The host cannot override this status with a
 constructor option. A custom backend must enforce its own browser-side network boundary.
 
+The fake report has `mode: :offline` and skips provider credential and SDK checks.
+Stagehand reports `mode: :live` even though it remains unsupported; mode describes
+the backend, not its qualification. See [Checking Configuration]({% link _core_features/diagnostics.md %})
+for the report fields and checks applied to each backend.
+
 Browserbase's documented [Allowed Domains feature](https://docs.browserbase.com/platform/browser/security/allowed-domains)
 applies to top-frame navigations. It does not block iframe or subresource requests such
 as scripts, images, and XHR. That setting alone cannot qualify provider egress. Any future

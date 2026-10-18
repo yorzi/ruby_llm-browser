@@ -2,12 +2,13 @@
 
 module RubyLLM
   module Browser
-    # Read-only preflight diagnostics for a live browser deployment.
+    # Read-only configuration diagnostics for an offline or live backend.
     #
     # The Doctor never makes a network call, never starts a session and never prints a
-    # credential. It reports the version pins, the environment overrides that the SDK
-    # would otherwise honour, and whether the configured backend is qualified to start a
-    # session. A `:fail` check means live use must not proceed.
+    # credential. Common checks report RubyLLM compatibility and backend capabilities.
+    # Only Stagehand backends inspect Stagehand's SDK and environment. FakeBackend
+    # checks do not load the SDK or inspect provider credentials. A local pass never
+    # qualifies a provider's actual guarantees. A `:fail` check blocks use.
     #
     #   report = RubyLLM::Browser::Doctor.new(backend: backend).report
     #   raise report[:summary] unless report[:ok]
@@ -23,13 +24,15 @@ module RubyLLM
         @env = env
       end
 
-      # @return [Hash] `{ ok:, summary:, checks: [...] }`, safe to log
+      # @return [Hash] `{ mode:, ok:, summary:, checks: [...] }`, safe to log.
+      #   Mode is `:offline` for FakeBackend in fake mode, `:unconfigured` without
+      #   a backend, and `:live` otherwise. Existing report keys remain available.
       def report
-        checks = [
-          ruby_llm_check, stagehand_check, egress_check, local_binary_check,
-          custom_headers_check, base_url_check, credentials_check
-        ].compact
+        checks = [ ruby_llm_check, egress_check, local_binary_check, custom_headers_check ]
+        checks.concat([ stagehand_check, base_url_check, credentials_check ]) if backend.is_a?(StagehandBackend)
+        checks.compact!
         {
+          mode: mode,
           ok: checks.none? { |check| check[:status] == :fail },
           summary: summary_for(checks),
           checks: checks
@@ -39,6 +42,13 @@ module RubyLLM
       def ok? = report[:ok]
 
       private
+
+      def mode
+        return :unconfigured unless backend
+        return :offline if backend.is_a?(FakeBackend) && backend.capabilities.server_mode == :fake
+
+        :live
+      end
 
       def ruby_llm_check
         version = Gem::Version.new(RubyLLM::VERSION)
@@ -72,7 +82,12 @@ module RubyLLM
                        "Stagehand backend is unsupported until provider egress and cleanup are qualified")
         end
         if capabilities.enforced_egress?
-          check(:egress_isolation, :pass, "the backend asserts enforced, browser-side egress isolation")
+          detail = if mode == :offline
+            "FakeBackend performs no network I/O; live egress is not verified"
+          else
+            "the backend asserts enforced, browser-side egress isolation"
+          end
+          check(:egress_isolation, :pass, detail)
         else
           check(:egress_isolation, :fail,
                 "the backend does not assert enforced egress isolation; live sessions are refused")

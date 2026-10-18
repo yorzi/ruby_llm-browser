@@ -35,6 +35,8 @@ RSpec.describe "offline workbench", type: :feature do
     click_button "Run Doctor"
     expect(page).to have_css("#status", text: "configuration passed", exact_text: true)
     expect(page).to have_css("#result", text: "live provider guarantees are not verified")
+    expect(page).to have_css("#result", text: '"mode": "offline"')
+    expect(page).not_to have_css("#result", text: "BROWSERBASE_API_KEY")
     expect(page).to have_css("#dispatch", text: "Fake session starts: 0")
   end
 end

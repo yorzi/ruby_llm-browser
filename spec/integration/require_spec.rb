@@ -65,4 +65,22 @@ RSpec.describe "requiring ruby_llm/browser" do
     expect(status).to be_success, stderr
     expect(stdout).to include("TOOLS_LOAD_BOUNDARY_PASS")
   end
+
+  it "runs offline diagnostics without loading the Stagehand SDK or reading provider environment" do
+    script = <<~'RUBY'
+      require "ruby_llm/browser"
+      unreadable = Object.new
+      def unreadable.[](_key) = raise("provider environment read")
+      backend = RubyLLM::Browser::FakeBackend.new
+      report = RubyLLM::Browser::Doctor.new(backend: backend, env: unreadable).report
+      raise "not offline" unless report[:mode] == :offline && report[:ok]
+      raise "unexpected dispatch" unless backend.calls.empty?
+      raise "SDK loaded" if $LOADED_FEATURES.any? { |path| path.match?(%r{/stagehand/}) }
+      puts "OFFLINE_DOCTOR_LOAD_BOUNDARY_PASS"
+    RUBY
+    stdout, stderr, status = run_ruby(script)
+
+    expect(status).to be_success, stderr
+    expect(stdout).to include("OFFLINE_DOCTOR_LOAD_BOUNDARY_PASS")
+  end
 end

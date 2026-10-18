@@ -30,3 +30,8 @@ puts "Extract: #{extract.execute(url: "https://docs.example.com/", instruction: 
 
 blocked = inspect.execute(url: "http://169.254.169.254/latest/meta-data")
 puts "Blocked: #{blocked[:error][:code]}"
+
+report = RubyLLM::Browser::Doctor.new(backend: context.backend).report
+raise "offline diagnostic failed" unless report[:ok] && report[:mode] == :offline
+raise "provider checks ran offline" if report[:checks].any? { |check| check[:name] == :credentials }
+puts "Doctor: #{report[:mode]}"

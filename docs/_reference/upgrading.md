@@ -18,6 +18,13 @@ After reading this guide, you will know:
 
 ## Public Releases
 
+The current development changes are additive: `Browser.tools(context:, schema:)`
+preserves the individual tool constructors, and Doctor adds `mode` while retaining
+`ok`, `summary`, and `checks`. Doctor check names now depend on the backend; do not
+assume every report includes Stagehand or credential checks, or rely on check order.
+There is no database migration or new runtime dependency. See
+[What's New]({% link _getting_started/whats-new.md %}) for details.
+
 Version `{{ site.version }}` is the first public release. It has no earlier public version
 to migrate from. Install it with `bundle add ruby_llm-browser --version "~> {{ site.version }}"`.
 

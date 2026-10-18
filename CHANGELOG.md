@@ -13,6 +13,12 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Agent validation commands, an offline development workbench, and desktop/mobile
   Chrome workflows with fixture screenshots. Browser libraries are development-only.
 
+### Changed
+
+- Doctor reports `mode: :offline`, `:live`, or `:unconfigured`. FakeBackend checks
+  skip Stagehand SDK and provider environment checks. Custom backends no longer
+  receive unrelated Stagehand credential warnings. Stagehand remains blocked.
+
 ## [0.1.0] - 2026-10-18
 
 ### Fixed

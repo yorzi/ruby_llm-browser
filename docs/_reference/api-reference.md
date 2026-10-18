@@ -20,6 +20,7 @@ The [generated RDoc reference]({{ '/api/' | relative_url }}) documents classes a
 | Simulate one host-approved action offline | `Act`, `Approval`, `ApprovalStore` |
 | Read a bounded result | `Result` |
 | Use an offline backend | `FakeBackend` |
+| Diagnose configuration without dispatch | `Doctor` ([guide]({% link _core_features/diagnostics.md %})) |
 | Adapt the Stagehand Ruby SDK | `StagehandBackend`, `Capabilities`, `Doctor` |
 | Persist operation or approval state | `OperationStore`, `ApprovalStore` and their implementations |
 | Run Rails background jobs and cleanup | `RubyLLM::Browser::Rails::OperationJob`, `Reaper` |
