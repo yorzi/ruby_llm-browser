@@ -180,6 +180,29 @@ completed successfully. The verifier's SHA-256 output is captured in the local, 
 `pkg/SHA256SUMS` sidecar after the final build so this document does not contain a
 self-referential artifact checksum.
 
+### Offline Act single-use race and docs (2026-10-18)
+
+The first release supports Act only as an offline FakeBackend simulation. It consumes a
+host-issued grant once; competing calls yield one recorded action and stale denials.
+Stagehand remains unsupported, no provider cleanup request is sent, and the full live Act
+protocol remains a later-version feature. The new feature guide explains grant issuance,
+revocation, binding, concurrency, denial results, and this boundary.
+
+| Check | Result |
+| --- | --- |
+| `RUBOCOP_CACHE_ROOT=/private/tmp/ruby_llm_browser_rubocop_cache bundle exec rake` | PASS: 306 examples, 0 failures; RuboCop inspected 94 files, 0 offenses |
+| Offline Act guide example via `bundle exec ruby -Ilib -` | PASS: returned `ok` and the issued approval ID; FakeBackend only, no model or provider call |
+| `python3 /Users/andy/.codex/skills/project-docs/scripts/docs.py check --dir docs` | PASS: 12 guides, 0 errors, 0 warnings |
+| `./docs/bin/build.sh` | PASS: Jekyll built the working tree |
+| `bundle exec rake build` | PASS: built `ruby_llm-browser-0.1.0.gem` |
+| `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, and `RAILS_PACKAGE_PASS`; isolated clean install |
+| Live provider egress, TTL, billing, and terminal cleanup | NOT RUN; no live calls authorized |
+| RubyGems publication | HOLD: independent H1, owner H2, exact name/account, and license clearance remain open |
+
+These local checks do not qualify browser-side egress, provider TTL, billing, or remote
+cleanup. They validate a local unpublished candidate, not a release. Rebuild the exact
+artifact after any release metadata changes and only after the H1/H2 gates.
+
 ## Commit log
 
 Small, meaningful commits land one piece at a time. See `git log` for the authoritative

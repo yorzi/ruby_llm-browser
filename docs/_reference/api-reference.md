@@ -17,6 +17,7 @@ The [generated RDoc reference]({{ '/api/' | relative_url }}) documents classes a
 | --- | --- |
 | Build trusted inputs for an operation | `Context`, `Policy`, `Budget` |
 | Inspect a page or extract structured data | `Inspect`, `Extract`, `Engine` |
+| Simulate one host-approved action offline | `Act`, `Approval`, `ApprovalStore` |
 | Read a bounded result | `Result` |
 | Use an offline backend | `FakeBackend` |
 | Adapt the Stagehand Ruby SDK | `StagehandBackend`, `Capabilities`, `Doctor` |

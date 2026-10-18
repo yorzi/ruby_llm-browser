@@ -53,9 +53,9 @@ the end request succeeded; it does not report the session's final status. Browse
 requests completion and may return a session still marked `PENDING`. The
 [`Get a Session` endpoint](https://docs.browserbase.com/reference/api/get-a-session)
 exposes status and `endedAt`, but the Stagehand Ruby SDK does not expose that lookup.
-The adapter therefore sends no release request during normal operation in this release;
-if asked to end an existing session, it returns `false` and keeps the operation
-`cleanup_pending` until terminal status can be verified.
+The adapter cannot start a live session in this release. Its `end_session` method returns
+`false` without calling the SDK. An operation whose cleanup is not confirmed stays
+`cleanup_pending`; the Gem does not claim terminal cleanup.
 
 ## Current Project Status
 

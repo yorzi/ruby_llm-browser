@@ -88,6 +88,40 @@ RSpec.describe RubyLLM::Browser::Act do
       expect(backend.call_count(:act)).to eq(0)
     end
 
+    it "records one synthetic action when two calls race for the same approval" do
+      arrivals = Queue.new
+      release = Queue.new
+      race_store = RubyLLM::Browser::InMemoryApprovalStore.new
+      consume_once = race_store.method(:consume_once)
+      race_store.define_singleton_method(:consume_once) do |id, **attributes|
+        arrivals << true
+        release.pop
+        consume_once.call(id, **attributes)
+      end
+      race_context = build_context(
+        backend: backend, policy: policy,
+        operation_store: RubyLLM::Browser::InMemoryOperationStore.new,
+        approval_store: race_store,
+        budget: RubyLLM::Browser::Budget.new(max_concurrent: 2)
+      )
+      approval = build_approval(race_store, context: race_context, url: url, action: action)
+      race_tool = described_class.new(context: race_context)
+
+      attempts = 2.times.map do
+        Thread.new do
+          race_tool.call(url: url, approval_id: approval.id, method: "click", selector: "a#docs")
+        end
+      end
+      2.times { arrivals.pop }
+      2.times { release << true }
+      results = attempts.map(&:value)
+
+      expect(results.count { |result| result[:status] == "ok" }).to eq(1)
+      expect(results.count { |result| result.dig(:error, :code) == "APPROVAL_STALE" }).to eq(1)
+      expect(backend.call_count(:act)).to eq(1)
+      expect(race_store.fetch(approval.id)).to be_consumed
+    end
+
     it "refuses a sensitive action before any session" do
       result = tool.call(url: url, approval_id: "apr-1", method: "click", selector: "button",
                          description: "purchase now")

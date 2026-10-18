@@ -79,8 +79,10 @@ or `Engine#extract` returns a `Result` object. Both forms include status and pro
 Check the status before consuming data. `truncated` is bounded output, while
 `unknown` and `cleanup_pending` need host review.
 
-Do not register `Act` by default. It is a separate experimental tool and live Engine
-calls are refused until the same-session host approval protocol is implemented.
+`Act` is an opt-in offline simulation. It does not dispatch a real browser action. Read
+[Simulating approved actions]({% link _core_features/offline-act.md %}) to issue a host
+grant and use the FakeBackend contract. The full live Act protocol is deferred to a
+later version.
 
 ## Next Steps
 

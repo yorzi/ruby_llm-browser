@@ -17,7 +17,7 @@ that RubyGems publication is still blocked.
 
 | Release | Date | Highlights |
 | --- | --- | --- |
-| Next | In development | Unreleased changes on the default branch |
+| Next | In development | Offline Act simulation and single-use host approval checks; the full live protocol remains deferred |
 
 When a release is approved and tagged, record its date and link its release notes here.
 For changes to existing applications, follow [Upgrading]({% link _reference/upgrading.md %}).

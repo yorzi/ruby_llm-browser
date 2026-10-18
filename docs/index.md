@@ -27,6 +27,10 @@ features:
     details: "Track lifecycle and cap time, steps, concurrent operations, and retained result bytes."
     link: /operation-lifecycle/
     link_text: Bound operation work
+  - title: "Offline action simulation"
+    details: "Exercise single-use host approval checks without opening a browser or changing a website."
+    link: /offline-act/
+    link_text: Simulate an approved action
 ---
 
 ## Before You Install

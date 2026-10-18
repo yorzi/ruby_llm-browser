@@ -50,6 +50,8 @@ Dir.mktmpdir("browser-concurrency") do |directory|
     approvals.consume_once(grant.id, actor_id: "a", run_id: "r", url: "https://example.com/",
                            action_digest: grant.action_digest, now: now).consumed? ? "consumed" : "bad"
   end
-  raise "approval race: #{consumed}" unless consumed.count("consumed") == 1
+  unless consumed.count("consumed") == 1 && consumed.count("APPROVAL_STALE") == 3
+    raise "approval race: #{consumed}"
+  end
   puts "PASS quota idempotency start approval"
 end
