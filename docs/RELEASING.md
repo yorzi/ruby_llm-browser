@@ -1,3 +1,9 @@
+---
+layout: default
+title: Compatibility and Release Checklist
+description: Verify the exact artifact and resolve release gates before requesting publication.
+---
+
 # Compatibility and release checklist
 
 Verify the exact artifact and resolve the release gates before requesting publication.
@@ -76,7 +82,7 @@ Verify all of the following:
 
 ## Publication gates
 
-**The release is currently NO-GO.** See [the audit findings](RELEASE_AUDIT.md).
+**The release is currently NO-GO.** See [the audit findings]({% link RELEASE_AUDIT.md %}).
 
 1. Prove browser-side egress across every request path, verified final URL reporting,
    TTL/cleanup behavior and host billing controls with a consented, bounded live test.
@@ -96,6 +102,6 @@ change repository visibility, or invoke RubyGems publication.
 
 ## Next steps
 
-- Review [requirement evidence](WORK.md) and [remaining audit findings](RELEASE_AUDIT.md).
-- Follow the [owner action plan](RELEASE_ACTION_PLAN.md) to decide the release scope
+- Review the requirement evidence in the source repository's `docs/WORK.md` and the [remaining audit findings]({% link RELEASE_AUDIT.md %}).
+- Follow the source repository's `docs/RELEASE_ACTION_PLAN.md` to decide the release scope
   and delegate the remaining preparation without authorizing publication prematurely.

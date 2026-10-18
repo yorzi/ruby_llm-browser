@@ -103,6 +103,7 @@ Only SQLite concurrency is tested locally; PostgreSQL requires its own qualifica
 
 ## Documentation
 
+- [Documentation website](https://rubyllm-browser.wangyaodi.com) (GitHub Pages)
 - [Documentation index](docs/README.md)
 - [API, configuration, and result reference](docs/API.md)
 - [Rails jobs and recovery](docs/RAILS.md)

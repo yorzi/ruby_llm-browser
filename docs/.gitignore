@@ -1,0 +1,8 @@
+_site/
+_site.ruby-llm-browser-generated
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+.bundle/
+vendor/
+!Gemfile.lock

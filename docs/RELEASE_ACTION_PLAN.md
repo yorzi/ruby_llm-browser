@@ -1,10 +1,17 @@
+---
+layout: default
+title: Owner Action Plan
+description: Choose the release scope, qualify the deployment, and resolve publication gates.
+llms: false
+---
+
 # Owner action plan
 
 Choose the release scope first, then qualify the deployment before authorizing publication.
 
 ## Current position
 
-- Hardening submitted as `0ec34d4` to the **private** repository.
+- Hardening baseline: `0ec34d4`.
 - Expanded remote CI is green: seven test jobs and the package/install/advisory job.
 - Public publication remains **NO-GO**. No live session or RubyGems push is authorized.
 
@@ -57,13 +64,14 @@ network isolation cannot be established, do not proceed with live browsing.
 
 ## Public disclosure decision
 
-Publishing a RubyGem makes its packaged code, guides and examples publicly downloadable,
-even if the GitHub repository remains private. Approve that disclosure before publication.
-Changing GitHub visibility is a separate action and is not part of submitting changes.
+Making the GitHub repository public exposes its tracked files, including files outside the
+gem package. Review the repository contents before changing visibility. RubyGems
+publication is a separate disclosure and still needs approval for the exact release.
 
 ## Suggested next instruction
 
 > Prepare a read-only 0.1 release scope and provider qualification plan. Keep live Act
-> disabled. Do not make paid calls, publish to RubyGems, or change repository visibility.
+> disabled. Do not make paid calls, publish to RubyGems, or change repository visibility
+> as part of release preparation.
 
 This is a proposal for your approval, not an instruction already received.

@@ -1,3 +1,9 @@
+---
+layout: default
+title: Security Model
+description: Understand what the gem enforces and what a deployment must prove independently.
+---
+
 # Security model
 
 Understand what the gem enforces and what a deployment must prove independently.
@@ -104,5 +110,5 @@ qualification. Cleanup and TTL are best-effort, and cost values are advisory.
 
 ## Next steps
 
-- Follow [Rails recovery](RAILS.md) to schedule cleanup and protect status access.
-- Review [the release audit](RELEASE_AUDIT.md) for evidence and remaining blockers.
+- Follow [Rails recovery]({% link RAILS.md %}) to schedule cleanup and protect status access.
+- Review [the release audit]({% link RELEASE_AUDIT.md %}) for evidence and remaining blockers.

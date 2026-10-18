@@ -1,3 +1,9 @@
+---
+layout: default
+title: Rails Jobs and Recovery
+description: Run bounded read-only operations with durable state and independently scheduled cleanup.
+---
+
 # Rails jobs and recovery
 
 Run bounded read-only operations with durable state and independently scheduled cleanup.
@@ -29,7 +35,7 @@ Use a database timeout appropriate to your workload. Database lock failures fail
 they must not be handled by retrying a browser call with a new operation ID.
 
 `Schema.create!` is for disposable fixtures, not production migrations or schema upgrades.
-The [offline Rails example](../examples/rails_adapter.rb) requires no full Rails app.
+The [offline Rails example](https://github.com/yorzi/ruby_llm-browser/blob/main/examples/rails_adapter.rb) requires no full Rails app.
 
 ## Configuring the trusted context factory
 
@@ -157,5 +163,5 @@ may not have been confirmed closed before reclaiming them.
 
 ## Next steps
 
-- Review [the API](API.md) for result interpretation and budget semantics.
-- Review [release blockers](RELEASE_AUDIT.md) before production deployment.
+- Review [the API]({% link API.md %}) for result interpretation and budget semantics.
+- Review [release blockers]({% link RELEASE_AUDIT.md %}) before production deployment.

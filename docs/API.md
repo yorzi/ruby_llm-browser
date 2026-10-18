@@ -1,3 +1,10 @@
+---
+layout: default
+title: API and Configuration
+permalink: /api-and-configuration/
+description: Configure trusted host objects and interpret bounded untrusted results.
+---
+
 # API and configuration
 
 Configure trusted host objects and interpret bounded, untrusted results.
@@ -10,7 +17,7 @@ After reading this guide, you will know:
 
 ## Creating a context
 
-Use the complete offline example in the [README](../README.md). `Context.new` requires:
+Use the complete offline example in [Getting Started]({% link _getting_started/getting-started.md %}). `Context.new` requires:
 
 | Keyword | Type and meaning |
 | --- | --- |
@@ -177,5 +184,5 @@ low-level adapter Act method defaults off and is not an alternative authorizatio
 
 ## Next steps
 
-- Read [Rails integration](RAILS.md) for durable workers and recovery.
-- Read [security boundaries](SECURITY_MODEL.md) before qualifying a live backend.
+- Read [Rails integration]({% link RAILS.md %}) for durable workers and recovery.
+- Read [security boundaries]({% link SECURITY_MODEL.md %}) before qualifying a live backend.

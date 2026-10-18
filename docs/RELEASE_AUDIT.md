@@ -1,3 +1,9 @@
+---
+layout: default
+title: Release Audit
+description: Local audit of release fixes, remaining publication blockers, and evidence limits.
+---
+
 # Release audit: 2026-10-18
 
 **Decision: NO-GO for public publication or production claims.**
@@ -41,7 +47,7 @@ The new audit regressions were first run against the original implementation and
 demonstrated the limit/schema/start/cancellation failures before correction.
 Primary evidence: `spec/security/release_audit_spec.rb`,
 `spec/integration/{concurrent_store,stagehand_http,generator,documentation}_spec.rb`,
-and the existing engine/store/job suites. See [WORK](WORK.md) for commands and versions.
+and the existing engine/store/job suites. The source repository's `docs/WORK.md` records the commands and dependency versions.
 
 ## Open publication blockers
 
@@ -102,9 +108,9 @@ checked separately against advisories. Artifact verification is recorded in WORK
 
 ## Submission verification
 
-Commit `0ec34d4` is pushed to the private repository. The expanded
+Commit `0ec34d4` is pushed to the repository. The expanded
 [GitHub Actions run](https://github.com/yorzi/ruby_llm-browser/actions/runs/39086570934)
 passed all seven compatibility jobs (302 examples each) and the build/install/advisory
 job, including `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, and
 `RAILS_PACKAGE_PASS`. This closes the expanded-CI follow-up, not the live-provider or
-owner-approval gates. See [the owner action plan](RELEASE_ACTION_PLAN.md).
+owner-approval gates. The source repository's `docs/RELEASE_ACTION_PLAN.md` records the owner decisions and follow-up actions.

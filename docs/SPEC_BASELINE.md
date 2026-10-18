@@ -1,3 +1,10 @@
+---
+layout: default
+title: Specification Baseline and Provenance
+description: Record product intent, evidence sources, and project ownership boundaries.
+llms: false
+---
+
 # Specification baseline and provenance
 
 This repository is the independent implementation of the `ruby_llm-browser` Gem. It is
@@ -56,7 +63,7 @@ separate specifications repository; this file records exactly which baseline was
 
 These corrections harden engineering behavior without claiming a specification scope
 change, H1/H2 approval, live use authorization, or release clearance. See
-[the audit](RELEASE_AUDIT.md) for unresolved protocol/product decisions.
+[the audit]({% link RELEASE_AUDIT.md %}) for unresolved protocol/product decisions.
 
 ## Outstanding blockers (carried from the spec baseline)
 
@@ -75,5 +82,5 @@ They are reproduced verbatim in intent so they cannot be quietly dropped.
 ## Evidence rule
 
 Every functional requirement case records test ID, exact versions, run command, fixture,
-result (`PASS` / `FAIL` / `NOT RUN`) and date in [`WORK.md`](WORK.md). Mocked tests never
+result (`PASS` / `FAIL` / `NOT RUN`) and date in `docs/WORK.md`. Mocked tests never
 prove remote browser egress. `NOT RUN` is recorded as `NOT RUN`, never as `PASS`.

@@ -1,3 +1,10 @@
+---
+layout: default
+title: WORK Ledger
+description: Track requirement evidence with exact fixtures, commands, dependency versions, and limits.
+llms: false
+---
+
 # WORK ledger
 
 The implementation repository owns this ledger. Each functional requirement records the
@@ -74,7 +81,7 @@ audit's fresh-GEM_HOME installation is the stronger check.
 The previous 270-example green suite did not cover several release-critical negative
 paths. The initial new audit regressions failed on output ceilings, malformed schemas,
 missing result validation, stale starts and early quota release. Those are now fixed.
-See [RELEASE_AUDIT.md](RELEASE_AUDIT.md) for findings, corrections and remaining gates.
+See the [release audit]({% link RELEASE_AUDIT.md %}) for findings, corrections and remaining gates.
 
 Evidence commands (all provider HTTP is stubbed or disabled):
 
@@ -142,8 +149,8 @@ The hardening is committed and pushed as `0ec34d4b48e0e3ab88bb893c4c731777d2aa24
 [CI run 39086570934](https://github.com/yorzi/ruby_llm-browser/actions/runs/39086570934)
 completed successfully: all seven test jobs report `302 examples, 0 failures`, and
 the package job reports no known dependency advisories plus all three clean-install
-success markers. The repository remains private; no RubyGems release or paid provider
-call was performed. Publication remains NO-GO for the other recorded gates.
+success markers. No RubyGems release or paid provider call was performed. Publication
+remains NO-GO for the other recorded gates.
 
 ## Commit log
 
