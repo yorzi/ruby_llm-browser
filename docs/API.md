@@ -127,34 +127,25 @@ contexts always require an explicitly supplied backend and never use a fallback.
 - `max_cost_usd` is **advisory only**. There is no cost ledger or provider hard spending
   cap in this release. Enforce billing limits in the provider/host.
 
-## Stagehand configuration
+## Stagehand backend status
 
-```ruby
-backend = RubyLLM::Browser::StagehandBackend.new(
-  browserbase_api_key: ENV.fetch("BROWSERBASE_API_KEY"),
-  model_api_key: ENV.fetch("MODEL_API_KEY"),
-  model_name: "openai/gpt-4o-mini"
-)
-report = RubyLLM::Browser::Doctor.new(backend: backend).report
-# The default backend is unverified and cannot start a session.
-```
+`StagehandBackend` is unsupported for live operations in this release. It always reports
+`egress_isolation: :unverified` and `act_supported?: false`. `Engine` refuses it before
+the first provider request, and direct start, navigation, observation, extraction, and
+Act calls also fail closed. No constructor option or injected client enables live use.
 
-Optional keywords: `server: :remote`, `base_url:`, `timeout: 60.0`,
-`egress_isolation: :unverified`, `act_supported: false`,
-`custom_headers_approved: false`, `env: ENV`, and injected `client:`.
-Only the host may construct/inject a client. The built-in client pins credentials and
-base URL explicitly, disables retries, self-healing, CAPTCHA solving and session
-recording/logging, and requests a provider timeout. None of these prove egress or TTL.
+The adapter remains in the source for future qualification. Its client pins credentials
+and base URL, disables retries, self-healing, CAPTCHA solving, session recording and
+session logging, and requests a provider timeout. These controls do not prove egress,
+TTL, billing, final-URL reporting, or cleanup. `end_session` can request termination,
+but returns `false` because the SDK response confirms only that the request succeeded,
+not that the session reached a terminal state. The operation remains `cleanup_pending`.
 
-Local mode requires a process-level `STAGEHAND_SEA_BINARY` or pinned
-`STAGEHAND_SERVER_VERSION` plus the same network isolation as remote mode. The SDK
-may fetch a specifically pinned server version. It must never fetch an unpinned latest
-version. Changes to relevant process environment values invalidate backend qualification;
-construct a new backend after reviewing them. Do not mutate ENV concurrently with use.
-
-Navigation requires a provider-returned final URL. A null/opaque result is not proof of
-the current page and returns `SESSION_UNKNOWN`, never guessed provenance. The pinned
-SDK permits null navigation results, so real-provider support remains unqualified.
+The constructor accepts `server: :remote`, `base_url:`, `timeout: 60.0`,
+`custom_headers_approved: false`, `env: ENV`, and an injected `client:` for internal
+contract tests. A future live implementation must verify all relevant environment
+settings, egress across every browser request path, TTL and closure status, and provider
+billing controls before it can advertise support.
 
 ## Dependency security floors
 
@@ -177,10 +168,9 @@ page/operation/session bindings. Revocation and consumption are atomic in the st
 **Do not use this as a production authorization protocol yet.** Bindings are currently
 optional; a candidate-list digest is not a DOM/target revision, and each Engine action
 opens a fresh session. The same-session host approval flow required by the specification
-is not implemented. The Engine refuses all non-fake Act calls before starting a session,
-even if `act_supported: true` was supplied to a backend. Selector/description keyword
-filters are defense in depth, not semantic proof that a click is harmless. Stagehand's
-low-level adapter Act method defaults off and is not an alternative authorization path.
+is deferred to a later version. The Engine refuses all non-fake Act calls before starting
+a session. Selector/description keyword filters are defense in depth, not semantic proof
+that a click is harmless. The Stagehand adapter does not support Act in this release.
 
 ## Next steps
 

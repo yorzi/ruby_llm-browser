@@ -45,7 +45,8 @@ inject a resolver only in controlled offline fixtures.
 
 `Policy` also sets `max_result_bytes`, extraction schema limits, and the set of allowed
 action methods for the experimental Act path. Browser-side egress must separately cover
-redirects, frames, popups, WebSockets, assets, and other subresources.
+redirects, frames, popups, WebSockets, assets, and other subresources before any live
+backend can be used. The built-in Stagehand adapter remains unsupported in this release.
 
 ## Defaults and Ownership
 

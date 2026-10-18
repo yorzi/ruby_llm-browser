@@ -82,19 +82,26 @@ Verify all of the following:
 
 ## Publication gates
 
-**The release is currently NO-GO.** See [the audit findings]({% link RELEASE_AUDIT.md %}).
+The first-release scope is offline read-only. `FakeBackend` is the only built-in backend
+supported for operations. `StagehandBackend` refuses live calls, its egress capability
+stays unverified, and its end request never counts as confirmed closure. The full live Act
+protocol is deferred to a later version. No provider calls were run or authorized.
 
-1. Prove browser-side egress across every request path, verified final URL reporting,
-   TTL/cleanup behavior and host billing controls with a consented, bounded live test.
-   No live call is authorized by an audit request alone.
-2. Implement the same-session host approval protocol before advertising live Act, or
-   explicitly approve a revised read-only release scope. Live Act remains refused.
+**Publication is on hold** until the independent H1 review, owner H2 approval, naming and
+license decisions, and exact-artifact review are complete. See [the audit findings]({% link RELEASE_AUDIT.md %}).
+
+1. Keep Stagehand and live Act unsupported in this release. Before enabling either in a
+   later version, qualify egress across every request path, final URL reporting, TTL,
+   cleanup status, unknown-start recovery, and provider billing controls. This requires a
+   separately authorized live qualification; no such call was made for this release.
+2. Complete an independent H1 review, generate and freshness-check the human HTML, and
+   obtain the owner's H2 approval against the fixed review question and candidate commit.
 3. Confirm RubyGems account/name ownership and naming/affiliation clearance. A 404 for
    an unregistered name does not reserve it or establish permission to use it.
 4. Complete the distribution license review. The resolved metadata inventory and pinned
    Stagehand MIT text in NOTICE are evidence, not legal/name clearance.
-5. Obtain the specification's separate review/owner approvals, run expanded remote CI,
-   review the final diff and artifact, and obtain explicit owner approval to publish.
+5. Run expanded remote CI, review the final diff and exact artifact, and publish only
+   after the outstanding gates pass.
 
 Keep the changelog under **Unreleased** until publication. Building version `0.1.0` is
 not proof a `0.1.0` release exists. This checklist does not create a tag, push commits,
@@ -103,5 +110,5 @@ change repository visibility, or invoke RubyGems publication.
 ## Next steps
 
 - Review the requirement evidence in the source repository's `docs/WORK.md` and the [remaining audit findings]({% link RELEASE_AUDIT.md %}).
-- Follow the source repository's `docs/RELEASE_ACTION_PLAN.md` to decide the release scope
-  and delegate the remaining preparation without authorizing publication prematurely.
+- Follow the source repository's `docs/RELEASE_ACTION_PLAN.md` for the selected scope and
+  the remaining review and distribution gates.

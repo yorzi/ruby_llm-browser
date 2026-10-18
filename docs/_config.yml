@@ -1,5 +1,5 @@
 title: "RubyLLM::Browser"
-description: "An unofficial RubyLLM extension for bounded browser inspection and schema-checked extraction through the Stagehand Ruby SDK."
+description: "An unofficial RubyLLM extension for offline bounded browser inspection and schema-checked extraction."
 tagline: "Policy-bound browser tools for RubyLLM"
 url: https://rubyllm-browser.wangyaodi.com
 baseurl: ""
@@ -49,7 +49,7 @@ jekyll_vitepress:
         - https://github.com/yorzi/ruby_llm-browser
   llms:
     title: RubyLLM::Browser Documentation
-    description: "An unofficial RubyLLM extension for bounded browser inspection and schema-checked extraction through the Stagehand Ruby SDK."
+    description: "An unofficial RubyLLM extension for offline bounded browser inspection and schema-checked extraction."
     full: true
   branding:
     site_title: "RubyLLM::Browser"

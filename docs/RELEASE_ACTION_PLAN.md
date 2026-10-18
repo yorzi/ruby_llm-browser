@@ -7,30 +7,32 @@ llms: false
 
 # Owner action plan
 
-Choose the release scope first, then qualify the deployment before authorizing publication.
+The first-release scope is selected. Resolve the remaining governance and distribution
+gates before attempting publication.
 
 ## Current position
 
 - Hardening baseline: `0ec34d4`.
 - Expanded remote CI is green: seven test jobs and the package/install/advisory job.
-- Public publication remains **NO-GO**. No live session or RubyGems push is authorized.
+- Owner decision on 2026-10-18: first release is read-only; defer live Act and mark the
+  built-in Stagehand backend unsupported until egress and cleanup are qualified.
+- No live provider calls are authorized or were run for this decision.
+- The owner requested a RubyGems publication attempt. Publication is still on hold while
+  H1/H2, naming, license, and exact-artifact checks remain open.
 
 ## Your next decision
 
-**Recommended: make 0.1 a read-only Inspect/Extract release and defer live Act.**
-This avoids making the first release depend on a larger same-session approval protocol.
-It does not remove the provider-security gate. Alternatively, keep the complete original
-scope and implement/qualify that protocol before release.
-
-An explicit scope decision authorizes preparing the revised specification/release pack.
-It is not H1/H2 approval, consent to spend money, or permission to publish.
+The first version supports offline `FakeBackend` operations. `StagehandBackend` remains in
+the source but cannot start or operate on a live session. The full same-session Act
+protocol is deferred to a later version. This scope decision is not H1/H2 approval or
+RubyGems publication clearance.
 
 ## Remaining work and ownership
 
 | Gate | What you decide or provide | What the assistant can do |
 | --- | --- | --- |
-| Release scope / Act | Approve read-only 0.1 scope, or retain live Act as a release requirement. | Draft the scope correction and formal review pack; keep live Act disabled, or design and implement the missing session-bound flow with tests. |
-| Provider qualification | Choose the actual deployment and approve its data-processing/billing owners. Later, approve a controlled test origin and bounded test plan. | Research provider controls, draft support questions, build an offline qualification harness, and identify unsupported guarantees. Run paid/live checks only after explicit authorization and security preconditions. |
+| Release scope / Act | Review the read-only first-release scope. Live Act remains a later-version feature. | Keep the Stagehand adapter disabled; update the release and formal review packs. |
+| Provider qualification | No live call is authorized for the first release. A later live release needs a named deployment and approval of data-processing/billing owners. | Record the unsupported egress and cleanup guarantees. Do not use a host assertion as qualification. |
 | Name and account | Confirm the publisher identity, maintain a RubyGems account with MFA, and accept the naming/affiliation/license review. | Recheck availability, assemble license evidence, prepare release metadata and a trusted-publishing workflow. An unregistered name is not reserved; do not publish a placeholder to claim it. |
 | Formal approval | Review the specification artifacts and make the required owner decisions. | Prepare the review materials and traceability; never mark human approval on your behalf. |
 | Publication | Explicitly approve the exact release artifact and public disclosure. | Build, verify, tag and publish only within the final authorization; provide checksums and a post-release verification report. |
@@ -48,8 +50,9 @@ It is not H1/H2 approval, consent to spend money, or permission to publish.
    advisory, not an enforceable currency cap.
 
 If the provider cannot meet a required guarantee, a test passing once is not a substitute.
-Keep that live backend unsupported, or qualify an isolated deployment with the missing
-controls. Do not flip `egress_isolation: :enforced` merely to bypass the preflight gate.
+Keep the Stagehand backend unsupported until the missing controls have been qualified.
+The current adapter does not accept `egress_isolation: :enforced`; do not add a host
+assertion merely to bypass the preflight gate.
 
 ## Authorizing a later live test
 
@@ -70,8 +73,9 @@ publication is a separate disclosure and still needs approval for the exact rele
 
 ## Suggested next instruction
 
-> Prepare a read-only 0.1 release scope and provider qualification plan. Keep live Act
-> disabled. Do not make paid calls, publish to RubyGems, or change repository visibility
-> as part of release preparation.
+> Prepare and review the read-only first release. Keep Stagehand and live Act disabled.
+> Do not make provider calls. Attempt RubyGems publication only after H1/H2, name/license,
+> and exact-artifact gates pass.
 
-This is a proposal for your approval, not an instruction already received.
+The owner selected this first-release scope on 2026-10-18. The publication request does
+not override the outstanding review and distribution gates.

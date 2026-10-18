@@ -25,6 +25,19 @@ RSpec.describe RubyLLM::Browser::Doctor do
     expect(report[:summary]).to include("blocked: egress_isolation")
   end
 
+  it "reports Stagehand as unsupported even when its SDK is installed" do
+    stagehand = RubyLLM::Browser::StagehandBackend.new(
+      browserbase_api_key: "bb-test-key", model_api_key: "model-test-key",
+      model_name: "openai/gpt-4o-mini", env: env
+    )
+    report = described_class.new(backend: stagehand, env: env).report
+    check = report[:checks].find { |item| item[:name] == :egress_isolation }
+
+    expect(report[:ok]).to be(false)
+    expect(check[:status]).to be(:fail)
+    expect(check[:detail]).to include("unsupported")
+  end
+
   it "warns about a base URL override the SDK would otherwise honour" do
     report = described_class.new(backend: backend, env: { "STAGEHAND_API_URL" => "https://evil.test" }).report
     check = report[:checks].find { |item| item[:name] == :base_url_override }

@@ -67,6 +67,10 @@ module RubyLLM
         return check(:egress_isolation, :fail, "no backend was supplied") unless backend
 
         capabilities = backend.capabilities
+        if backend.is_a?(StagehandBackend)
+          return check(:egress_isolation, :fail,
+                       "Stagehand backend is unsupported until provider egress and cleanup are qualified")
+        end
         if capabilities.enforced_egress?
           check(:egress_isolation, :pass, "the backend asserts enforced, browser-side egress isolation")
         else

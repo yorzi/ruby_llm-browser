@@ -8,13 +8,16 @@ Gem::Specification.new do |spec|
   spec.authors = [ "Andy Wang" ]
   spec.email = [ "wangyaodi@gmail.com" ]
 
-  spec.summary = "Policy-bound browser Inspect/Extract tools for RubyLLM, backed by the official Stagehand Ruby SDK."
+  spec.summary = "Offline, policy-bound browser Inspect and Extract tools for RubyLLM."
   spec.description = <<~DESCRIPTION
     An unofficial community extension for RubyLLM. It adds policy-bound, read-only
-    browser Inspect and Extract tools built on the official Stagehand Ruby SDK, with
+    browser Inspect and Extract tools with an offline FakeBackend. The Stagehand Ruby SDK
+    adapter is present but unsupported for live operations until provider egress and
+    cleanup are qualified. The first release also includes
     explicit URL/SSRF policy, bounded and sanitized results with provenance, durable
-    operation and session lifecycle bookkeeping, budgets, experimental offline Act
-    simulation, and an optional Rails 8 / Active Job adapter. The Gem core works in plain
+    operation and session lifecycle bookkeeping, budgets, offline Act simulation, and an
+    optional Rails 8 / Active Job adapter. The full live Act protocol is deferred to a
+    later version. The Gem core works in plain
     Ruby without Rails.
   DESCRIPTION
 

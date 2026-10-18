@@ -1,12 +1,12 @@
 ---
 layout: home
 title: "RubyLLM::Browser"
-description: "An unofficial RubyLLM extension for bounded browser inspection and schema-checked extraction through the Stagehand Ruby SDK."
+description: "An unofficial RubyLLM extension for offline bounded browser inspection and schema-checked extraction."
 permalink: /
 hero:
   name: "RubyLLM::Browser"
   text: "Policy-bound browser tools for RubyLLM"
-  tagline: "An unofficial RubyLLM extension for bounded browser inspection and schema-checked extraction through the Stagehand Ruby SDK."
+  tagline: "An unofficial RubyLLM extension for offline bounded browser inspection and schema-checked extraction."
   actions:
     - theme: brand
       text: Get started
@@ -20,7 +20,7 @@ features:
     link: /inspect-extract/
     link_text: Inspect and extract
   - title: "Host-controlled access"
-    details: "The host supplies identity, URL policy, schemas, budgets, consent, and backend credentials."
+    details: "The host supplies identity, URL policy, schemas, budgets, and consent. Live Stagehand use is disabled."
     link: /source-policy/
     link_text: Control source access
   - title: "Bounded operation state"
@@ -33,6 +33,9 @@ features:
 
 This gem has not been published to RubyGems. Install the unreleased source from GitHub.
 A version such as `0.1.0` in the source tree is not a claim that a public release exists.
+The first release supports only the offline `FakeBackend`. The built-in Stagehand adapter
+is unsupported until provider egress and confirmed cleanup are qualified. Live Act is
+deferred to a later version.
 
 ## Install
 

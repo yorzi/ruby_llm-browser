@@ -43,7 +43,8 @@ module RubyLLM
     # - never return `cdp_url`, cookies or credentials
     # - report honest {Capabilities}
     #
-    # {FakeBackend} is the offline reference; {StagehandBackend} wraps the official SDK.
+    # {FakeBackend} is the offline reference. {StagehandBackend} wraps the official SDK
+    # but is unsupported for live use in the first release.
     class Backend
       # @return [Capabilities]
       def capabilities

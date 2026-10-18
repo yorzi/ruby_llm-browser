@@ -2,7 +2,7 @@
 
 module RubyLLM
   module Browser
-    # The reference {Backend}, wrapping the official `stagehand` Ruby SDK.
+    # An experimental {Backend} adapter for the official `stagehand` Ruby SDK.
     #
     # It is a thin, fail-closed translation layer, not a browser engine. It:
     #
@@ -19,9 +19,9 @@ module RubyLLM
     # The SDK is required lazily, inside {#client}, so requiring this Gem never reads
     # Stagehand environment variables and never starts or downloads a server.
     #
-    # Egress isolation is a property of the deployment, not of this class. A host must
-    # pass `egress_isolation: :enforced` only after it has qualified the actual browser
-    # network. Until then, {Policy#authorize_egress!} refuses to start a session.
+    # This adapter is unsupported for live operations in the first release. Its
+    # capabilities always report unverified egress, so callers cannot enable it by
+    # passing a host assertion. Provider egress and cleanup need qualification first.
     class StagehandBackend < Backend
       DEFAULT_BASE_URL = "https://api.stagehand.browserbase.com"
       CUSTOM_HEADERS_ENV = "STAGEHAND_CUSTOM_HEADERS"
@@ -38,16 +38,12 @@ module RubyLLM
       # @param base_url [String, nil] explicit endpoint; defaults to the official remote
       #   endpoint. Never read from the environment.
       # @param timeout [Numeric] per-request timeout in seconds
-      # @param egress_isolation [Symbol] host's assertion; `:enforced` only after
-      #   qualifying the browser network, otherwise `:unverified`
-      # @param act_supported [Boolean]
       # @param custom_headers_approved [Boolean] whether the host approved the SDK's
       #   always-merged `STAGEHAND_CUSTOM_HEADERS`
       # @param env [Hash] environment to inspect; injectable for tests
       # @param client [Object, nil] an already-built client (tests/advanced hosts)
       def initialize(browserbase_api_key:, model_api_key:, model_name:,
                      server: :remote, base_url: nil, timeout: 60.0,
-                     egress_isolation: :unverified, act_supported: false,
                      custom_headers_approved: false, env: ENV, client: nil)
         super()
         @browserbase_api_key = presence!(browserbase_api_key, :browserbase_api_key)
@@ -66,11 +62,11 @@ module RubyLLM
         @client = client
         @capabilities = Capabilities.new(
           server_mode: local? ? :local : :remote,
-          egress_isolation: egress_isolation,
+          egress_isolation: :unverified,
           local_binary_pinned: @local_binary_pinned,
           custom_headers_present: @custom_headers_present,
           custom_headers_approved: @custom_headers_approved,
-          act_supported: act_supported
+          act_supported: false
         )
       end
 
@@ -82,7 +78,8 @@ module RubyLLM
         return @capabilities if environment_unchanged?
 
         Capabilities.new(server_mode: local? ? :local : :remote, egress_isolation: :unverified,
-                         custom_headers_present: true, custom_headers_approved: false)
+                         custom_headers_present: true, custom_headers_approved: false,
+                         act_supported: false)
       end
 
       def local? = server == "local"
@@ -108,6 +105,7 @@ module RubyLLM
       end
 
       def navigate(session, url:, operation:, now:)
+        ensure_qualified!
         response = effectful do
           client.sessions.navigate(session.id, url: url, request_options: effectful_options(operation, now: now))
         end
@@ -121,6 +119,7 @@ module RubyLLM
       end
 
       def observe(session, instruction:, operation:, now:)
+        ensure_qualified!
         response = read do
           client.sessions.observe(session.id, instruction: instruction,
                                              request_options: read_options(operation, now: now))
@@ -130,6 +129,7 @@ module RubyLLM
       end
 
       def extract(session, schema:, instruction:, operation:, now:)
+        ensure_qualified!
         response = read do
           client.sessions.extract(session.id, schema: schema, instruction: instruction,
                                              request_options: read_options(operation, now: now))
@@ -139,6 +139,7 @@ module RubyLLM
       end
 
       def act(session, action:, operation:, now:)
+        ensure_qualified!
         raise UnsupportedSecurityCapability, "backend Act is disabled" unless capabilities.act_supported?
         response = effectful do
           client.sessions.act(session.id, input: action_input(action),
@@ -148,11 +149,12 @@ module RubyLLM
         dump(response.data&.result)
       end
 
-      # Returns true only when the provider confirms closure. Any unconfirmed or failed
-      # outcome returns false so the operation stays `cleanup_pending`.
+      # Requests session termination. The SDK response only reports request success; it
+      # does not expose terminal session status. Keep the operation `cleanup_pending`
+      # until a provider status check can confirm closure.
       def end_session(session, operation:, now:)
-        response = client.sessions.end_(session.id, request_options: { max_retries: 0, timeout: @timeout })
-        response.success == true
+        client.sessions.end_(session.id, request_options: { max_retries: 0, timeout: @timeout })
+        false
       rescue Stagehand::Errors::Error
         false
       end
@@ -321,7 +323,8 @@ module RubyLLM
         current = capabilities
         unless current.enforced_egress? && (!current.local_mode? || current.local_binary_pinned?) &&
             (!current.custom_headers_present? || current.custom_headers_approved?)
-          raise UnsupportedSecurityCapability, "Stagehand backend is not egress-qualified"
+          raise UnsupportedSecurityCapability,
+                "Stagehand backend is unsupported until provider egress and cleanup are qualified"
         end
         if !ENV[CUSTOM_HEADERS_ENV].to_s.empty? && !@custom_headers_approved
           raise UnsupportedSecurityCapability, "Stagehand process custom headers are not approved"

@@ -49,8 +49,10 @@ time, redirects, frames, popups, WebSockets, scripts, and all other subresources
 can initiate requests even when the gem only observes them.
 
 The backend must report enforced egress isolation before a live session can start.
-`egress_isolation: :enforced` is a host assertion. It does not install a firewall or
-prove that the provider enforces one. See [backend qualification]({% link _advanced/live-backend-qualification.md %}) before selecting a live backend.
+The built-in `StagehandBackend` always reports `:unverified` and refuses live calls in
+the first release. No caller option can override that posture. A custom backend must
+provide its own enforceable egress control; a host assertion does not install a firewall
+or prove provider behavior. See [backend qualification]({% link _advanced/live-backend-qualification.md %}) before selecting a live backend.
 
 ## Next Steps
 

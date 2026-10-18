@@ -60,8 +60,9 @@ puts inspect_tool.execute(url: "https://docs.example.com/")[:status] # => ok
 puts extract_tool.execute(url: "https://docs.example.com/")[:data]   # => {"title"=>"Example"}
 ```
 
-`FakeBackend` supplies deterministic responses. Replace it with a host-qualified backend
-only after you have reviewed the [security boundaries]({% link _advanced/live-backend-qualification.md %}).
+`FakeBackend` supplies deterministic responses. The built-in Stagehand adapter is not
+supported for live operations in this release. Use a custom backend only after you have
+reviewed the [security boundaries]({% link _advanced/live-backend-qualification.md %}).
 
 ## Next Steps
 

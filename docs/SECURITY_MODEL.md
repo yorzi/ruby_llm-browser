@@ -29,9 +29,10 @@ IPv6 and IPv4-mapped addresses. Real DNS validation is enabled by default.
 
 These checks run in Ruby. They do **not** enforce a remote browser's DNS view, redirects,
 iframes, popups, WebSockets, subresources, scripts or connection-time rebinding.
-`Policy#authorize_egress!` refuses an unverified backend before starting a session.
-`egress_isolation: :enforced` records a **host assertion**, not independent proof and
-not installed firewall enforcement.
+`Policy#authorize_egress!` refuses an unverified backend before starting a session. The
+built-in `StagehandBackend` always reports unverified egress and is unsupported for live
+operations in the first release. No constructor option can change that. A custom backend
+must enforce and evidence its own browser-side egress controls.
 
 Before a host makes that assertion, it must test every request path against a controlled
 public test origin and prove private/metadata addresses remain unreachable at connection
@@ -40,7 +41,8 @@ local-mode browsers; a local browser is not a sandbox by default.
 
 Stagehand navigation results may be null. The adapter refuses to invent a final URL in
 that case. A live deployment must establish how its actual server reports a verified
-current URL; the SDK schema alone is not evidence. Returned page data remains untrusted.
+current URL; the SDK schema alone is not evidence. The current release has no supported
+Stagehand deployment. Returned page data remains untrusted.
 
 ## Operation identity and recovery
 
@@ -69,7 +71,8 @@ it sees; multi-backend routing is not represented in the schema.
 ## Actions and approvals
 
 **Live Act is disabled at the Engine boundary**, including when a backend advertises
-action support. Offline simulation checks RubyLLM approval integration, read-only grant
+action support. The first release is read-only; the full live Act protocol is deferred to
+a later version. Offline simulation checks RubyLLM approval integration, read-only grant
 resolution, atomic single-use consumption, actor/run/action/URL and supplied revision
 bindings, expiration, revocation, replay, and unknown dispatch outcomes.
 

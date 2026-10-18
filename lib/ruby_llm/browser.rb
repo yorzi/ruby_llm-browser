@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 # RubyLLM::Browser is an unofficial community extension for RubyLLM that adds
-# policy-bound browser tools backed by the official Stagehand Ruby SDK.
+# policy-bound browser tools with an offline reference backend and an unsupported
+# experimental Stagehand adapter.
 #
 #   require "ruby_llm"
 #   require "ruby_llm/browser"
@@ -41,7 +42,7 @@ require_relative "browser/tools/act"
 module RubyLLM
   # Policy-bound browser tools for RubyLLM agents.
   #
-  # The host application owns identity, authorization, consent and the qualified
+  # The host application owns identity, authorization, consent and the backend
   # backend; this namespace owns URL/source policy, bounded results and provenance,
   # operation and session lifecycle, budgets and one-use action approvals.
   module Browser

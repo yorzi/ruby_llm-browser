@@ -7,12 +7,11 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
   subject(:backend) do
     described_class.new(
       browserbase_api_key: "bb-secret-key-1234", model_api_key: "model-secret-key-5678",
-      model_name: "openai/gpt-4o-mini", egress_isolation: :enforced,
-      env: env, client: client, act_supported: true
+      model_name: "openai/gpt-4o-mini", env: env, client: client
     )
   end
 
-  let(:sessions) { instance_double(Stagehand::Resources::Sessions) }
+  let(:sessions) { instance_spy(Stagehand::Resources::Sessions) }
   let(:client) { instance_double(Stagehand::Client, sessions: sessions) }
   let(:env) { {} }
   let(:now) { Time.utc(2026, 10, 17, 12, 0, 0) }
@@ -28,9 +27,24 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
     BrowserSpecSupport::StagehandData.new(session_id: session_id, cdp_url: cdp_url, result: result)
   end
 
+  # Test-only subclass exercises the SDK translation behind the production
+  # qualification gate. The public StagehandBackend has no qualification switch.
+  def qualified_backend_for_contract_test
+    adapter_class = Class.new(described_class) do
+      def capabilities
+        RubyLLM::Browser::Capabilities.new(server_mode: :remote, egress_isolation: :enforced)
+      end
+    end
+    adapter_class.new(
+      browserbase_api_key: "bb-secret-key-1234", model_api_key: "model-secret-key-5678",
+      model_name: "openai/gpt-4o-mini", env: env, client: client
+    )
+  end
+
   it "reports honest capabilities and pinned secrets" do
     expect(backend.capabilities.server_mode).to eq(:remote)
-    expect(backend.capabilities.enforced_egress?).to be(true)
+    expect(backend.capabilities.egress_isolation).to eq(:unverified)
+    expect(backend.capabilities.act_supported?).to be(false)
     expect(backend.secrets).to contain_exactly("bb-secret-key-1234", "model-secret-key-5678")
   end
 
@@ -65,10 +79,17 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
   end
 
   describe "#start" do
-    it "returns an isolated session and never surfaces the cdp_url" do
+    it "refuses a live session without any caller override" do
+      expect { backend.start(context: context, operation: operation, now: now) }
+        .to raise_error(RubyLLM::Browser::UnsupportedSecurityCapability, /unsupported/)
+      expect(sessions).not_to have_received(:start)
+    end
+
+    it "returns an isolated session and never surfaces the cdp_url in the adapter contract" do
+      contract_backend = qualified_backend_for_contract_test
       allow(sessions).to receive(:start)
         .and_return(response(data(session_id: "sess-1", cdp_url: "ws://secret-cdp")))
-      result = backend.start(context: context, operation: operation, now: now)
+      result = contract_backend.start(context: context, operation: operation, now: now)
 
       expect(result.id).to eq("sess-1")
       expect(sessions).to have_received(:start)
@@ -77,27 +98,42 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
     end
 
     it "treats an ambiguous start as unknown, not as success" do
+      contract_backend = qualified_backend_for_contract_test
       timeout = Stagehand::Errors::APITimeoutError.new(url: URI("https://api.stagehand.browserbase.com"))
       allow(sessions).to receive(:start).and_raise(timeout)
-      expect { backend.start(context: context, operation: operation, now: now) }
+      expect { contract_backend.start(context: context, operation: operation, now: now) }
         .to raise_error(RubyLLM::Browser::SessionUnknown)
     end
 
     it "treats a 5xx start as unknown and a 4xx start as a provider error" do
+      contract_backend = qualified_backend_for_contract_test
       allow(sessions).to receive(:start).and_raise(status_error(500))
-      expect { backend.start(context: context, operation: operation, now: now) }
+      expect { contract_backend.start(context: context, operation: operation, now: now) }
         .to raise_error(RubyLLM::Browser::SessionUnknown)
 
       allow(sessions).to receive(:start).and_raise(status_error(401))
-      expect { backend.start(context: context, operation: operation, now: now) }
+      expect { contract_backend.start(context: context, operation: operation, now: now) }
         .to raise_error(RubyLLM::Browser::ProviderError, /status 401/)
     end
   end
 
+  it "refuses every Stagehand operation that can issue a live browser request by default" do
+    expect { backend.navigate(session, url: "https://docs.example.com/b", operation: operation, now: now) }
+      .to raise_error(RubyLLM::Browser::UnsupportedSecurityCapability, /unsupported/)
+    expect { backend.observe(session, instruction: nil, operation: operation, now: now) }
+      .to raise_error(RubyLLM::Browser::UnsupportedSecurityCapability, /unsupported/)
+    expect { backend.extract(session, schema: {}, instruction: nil, operation: operation, now: now) }
+      .to raise_error(RubyLLM::Browser::UnsupportedSecurityCapability, /unsupported/)
+    expect(sessions).not_to have_received(:navigate)
+    expect(sessions).not_to have_received(:observe)
+    expect(sessions).not_to have_received(:extract)
+  end
+
   describe "#navigate" do
     it "returns the session at the requested URL" do
+      contract_backend = qualified_backend_for_contract_test
       allow(sessions).to receive(:navigate).and_return(response(data(result: { "url" => "https://docs.example.com/b" })))
-      moved = backend.navigate(session, url: "https://docs.example.com/b", operation: operation, now: now)
+      moved = contract_backend.navigate(session, url: "https://docs.example.com/b", operation: operation, now: now)
 
       expect(moved.url).to eq("https://docs.example.com/b")
       expect(sessions).to have_received(:navigate)
@@ -105,65 +141,59 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
     end
 
     it "uses the provider's final URL when it reports one" do
+      contract_backend = qualified_backend_for_contract_test
       allow(sessions).to receive(:navigate)
         .and_return(response(data(result: { "url" => "https://docs.example.com/landed" })))
-      moved = backend.navigate(session, url: "https://docs.example.com/b", operation: operation, now: now)
+      moved = contract_backend.navigate(session, url: "https://docs.example.com/b", operation: operation, now: now)
       expect(moved.url).to eq("https://docs.example.com/landed")
     end
   end
 
   describe "#observe / #extract" do
     it "maps observed candidate actions to plain hashes" do
+      contract_backend = qualified_backend_for_contract_test
       action = instance_double(Stagehand::Models::SessionObserveResponse::Data::Result,
                                description: "Open the docs link", selector: "a#docs",
                                method_: "click", arguments: [])
       allow(sessions).to receive(:observe).and_return(response(data(result: [ action ])))
 
-      observed = backend.observe(session, instruction: "the docs link", operation: operation, now: now)
+      observed = contract_backend.observe(session, instruction: "the docs link", operation: operation, now: now)
       expect(observed).to eq([
         { "description" => "Open the docs link", "method" => "click", "selector" => "a#docs", "arguments" => [] }
       ])
     end
 
     it "returns extracted data as plain, string-keyed JSON" do
+      contract_backend = qualified_backend_for_contract_test
       allow(sessions).to receive(:extract)
         .and_return(response(data(result: { title: "Hi", tags: [ "a" ] })))
 
-      data = backend.extract(session, schema: {}, instruction: nil, operation: operation, now: now)
+      data = contract_backend.extract(session, schema: {}, instruction: nil, operation: operation, now: now)
       expect(data).to eq("title" => "Hi", "tags" => [ "a" ])
     end
 
     it "does not retry read-only calls" do
+      contract_backend = qualified_backend_for_contract_test
       allow(sessions).to receive(:extract).and_raise(status_error(500))
-      expect { backend.extract(session, schema: {}, instruction: nil, operation: operation, now: now) }
+      expect { contract_backend.extract(session, schema: {}, instruction: nil, operation: operation, now: now) }
         .to raise_error(RubyLLM::Browser::ProviderError)
     end
   end
 
   describe "#act" do
-    it "sends the normalized action and returns the dumped result" do
-      action = { "description" => "open docs", "method" => "click", "selector" => "a#docs", "arguments" => [] }
-      allow(sessions).to receive(:act)
-        .and_return(response(data(result: { success: true, message: "clicked" })))
-
-      result = backend.act(session, action: action, operation: operation, now: now)
-      expect(result).to eq("success" => true, "message" => "clicked")
-      expect(sessions).to have_received(:act).with("sess-1", hash_including(input: action))
-    end
-
-    it "treats an ambiguous dispatch as unknown and never retries" do
-      timeout = Stagehand::Errors::APITimeoutError.new(url: URI("https://api.stagehand.browserbase.com"))
-      allow(sessions).to receive(:act).and_raise(timeout)
-      expect { backend.act(session, action: {}, operation: operation, now: now) }
-        .to raise_error(RubyLLM::Browser::SessionUnknown)
-      expect(sessions).to have_received(:act).once
+    it "refuses Act even when the test simulates qualified egress" do
+      contract_backend = qualified_backend_for_contract_test
+      expect { contract_backend.act(session, action: {}, operation: operation, now: now) }
+        .to raise_error(RubyLLM::Browser::UnsupportedSecurityCapability, /Act is disabled/)
+      expect(sessions).not_to have_received(:act)
     end
   end
 
   describe "#end_session" do
-    it "confirms only a successful closure" do
+    it "does not treat an accepted end request as confirmed closure" do
       allow(sessions).to receive(:end_).and_return(response(nil))
-      expect(backend.end_session(session, operation: operation, now: now)).to be(true)
+      expect(backend.end_session(session, operation: operation, now: now)).to be(false)
+      expect(sessions).to have_received(:end_).once
 
       allow(sessions).to receive(:end_).and_raise(status_error(500))
       expect(backend.end_session(session, operation: operation, now: now)).to be(false)
@@ -182,6 +212,7 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
       )
       expect(local.capabilities.local_mode?).to be(true)
       expect(local.capabilities.local_binary_pinned?).to be(false)
+      expect(local.capabilities.egress_isolation).to eq(:unverified)
       expect(RubyLLM::Browser::Policy.new(allowed_hosts: [ "docs.example.com" ])
         .egress_qualified?(local.capabilities)).to be(false)
     end
@@ -201,8 +232,7 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
     it "reports preset headers and refuses qualification unless approved" do
       present = described_class.new(
         browserbase_api_key: "bb-secret-key-1234", model_api_key: "model-secret-key-5678",
-        model_name: "openai/gpt-4o-mini", egress_isolation: :enforced,
-        env: { "STAGEHAND_CUSTOM_HEADERS" => "X-Trace: 1" }
+        model_name: "openai/gpt-4o-mini", env: { "STAGEHAND_CUSTOM_HEADERS" => "X-Trace: 1" }
       )
       expect(present.capabilities.custom_headers_present?).to be(true)
       qualified = RubyLLM::Browser::Policy.new(allowed_hosts: [ "docs.example.com" ])
@@ -210,10 +240,11 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
 
       approved = described_class.new(
         browserbase_api_key: "bb-secret-key-1234", model_api_key: "model-secret-key-5678",
-        model_name: "openai/gpt-4o-mini", egress_isolation: :enforced,
+        model_name: "openai/gpt-4o-mini",
         custom_headers_approved: true, env: { "STAGEHAND_CUSTOM_HEADERS" => "X-Trace: 1" }
       )
-      expect(qualified.egress_qualified?(approved.capabilities)).to be(true)
+      expect(approved.capabilities.custom_headers_approved?).to be(true)
+      expect(qualified.egress_qualified?(approved.capabilities)).to be(false)
     end
   end
 

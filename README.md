@@ -1,9 +1,13 @@
 # ruby_llm-browser
 
-An **unofficial community extension** for [RubyLLM](https://rubyllm.com), built on the
-official [Stagehand Ruby SDK](https://github.com/browserbase/stagehand-ruby).
+An **unofficial community extension** for [RubyLLM](https://rubyllm.com), with an
+experimental adapter for the official [Stagehand Ruby SDK](https://github.com/browserbase/stagehand-ruby).
 It provides read-only `Inspect` and schema-pinned `Extract` tools, operation bookkeeping,
 and an optional Rails 8 adapter. It does not implement a browser engine.
+
+The first release supports the offline `FakeBackend` only. `StagehandBackend` is present
+for future qualification, but it refuses live operations until browser-side egress and
+provider cleanup are qualified.
 
 > **Pre-release, not approved for publication or production use.** Offline tests pass,
 > but browser-side egress, live-provider behavior, and the full session-bound Act
@@ -60,7 +64,7 @@ puts extract_tool.execute(url: "https://docs.example.com/")[:data]   # => {"titl
 Register these instances on your configured RubyLLM chat with
 `chat.with_tools(inspect_tool, extract_tool)`. Never register `Act` by default.
 The host supplies authenticated **string** actor/run IDs, authorization, consent,
-the pinned extraction schema, budgets, and the qualified backend.
+the pinned extraction schema, budgets, and the backend.
 
 The tools return a **Hash**, not a `Result` object. Direct `Engine` calls return a
 `Result`. Check `status` and `error`; page data is untrusted evidence, not verified truth.
@@ -69,8 +73,9 @@ The tools return a **Hash**, not a `Result` object. Direct `Engine` calls return
 
 - URL policy checks hosts, schemes, ports, and public DNS/IP addresses. It cannot
   sandbox a remote browser or control page-triggered requests.
-- A live backend is refused unless its host asserts qualified browser-side egress.
-  `egress_isolation: :enforced` is an assertion, **not a switch that installs isolation**.
+- No built-in live backend is supported in this release. `StagehandBackend` always
+  reports egress as unverified and refuses live operations. A host assertion cannot
+  enable it.
 - The model cannot increase the host's output limit. Results are redacted, schema-checked
   for extraction, and bounded by the policy and remaining operation bytes.
 - A durable operation is claimed before start. Duplicate jobs cannot start it again.
@@ -79,9 +84,9 @@ The tools return a **Hash**, not a `Result` object. Direct `Engine` calls return
   retain quota until cleanup is confirmed. Run a reaper independently of job workers.
 - `max_cost_usd` is advisory metadata, not an enforced billing cap. Provider timeouts and
   cleanup are also not a promise of zero future charges.
-- `Act` is simulation-only. The Engine refuses non-fake Act before session start.
-  Stagehand adapter Act support also defaults to **false**. Candidate-list
-  hashes and selector keyword filters are not proof of target identity or action safety.
+- `Act` is an offline simulation only. The full same-session live approval protocol is
+  deferred to a later version. Candidate-list hashes and selector keyword filters are
+  not proof of target identity or action safety.
 
 ## Rails integration
 

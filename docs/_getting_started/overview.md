@@ -35,10 +35,11 @@ it returns. If the remote outcome or cleanup cannot be confirmed, the operation 
 `unknown` or `cleanup_pending`; it is not treated as a successful result.
 
 `Policy` controls URL destinations, extraction schemas, output limits, and the restricted
-Act simulation. `FakeBackend` runs without network access. `StagehandBackend` adapts the
-Stagehand Ruby SDK, but the host must establish browser-side egress isolation separately.
-In-memory stores are useful for a single process and offline examples; use the Rails
-adapter or another durable store when work must survive restarts or worker changes.
+Act simulation. `FakeBackend` runs without network access and is the only supported
+backend in the first release. `StagehandBackend` adapts the Stagehand Ruby SDK but refuses
+live operations until provider egress and cleanup are qualified. In-memory stores are
+useful for a single process and offline examples; use the Rails adapter or another durable
+store when work must survive restarts or worker changes.
 
 The output is evidence with provenance, not a verified statement of fact. Page content
 can be adversarial and can initiate requests inside the remote browser even when the gem

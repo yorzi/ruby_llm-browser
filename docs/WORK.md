@@ -27,8 +27,8 @@ simple: `NOT RUN` is written as `NOT RUN`, never as `PASS`.
 | --- | --- | --- |
 | S0 | Bootstrap: gemspec, version, Ruby-only fixture, CI, OSS docs, baseline record | DONE |
 | S1 | Read-only `Inspect`/`Extract` core with fake backend, policy, bounded results | DONE |
-| S2 | Stagehand adapter, durable operation store, quotas, TTL/reaper, reconciliation | PARTIAL: hardened offline; live egress/final-URL/TTL and unknown-start correlation unqualified |
-| S3 | Opt-in `Act` with one-use approvals, Rails 8 jobs, cancellation, negative tests | PARTIAL: read-only Rails jobs tested; Act simulation only, live same-session protocol missing |
+| S2 | Stagehand adapter, durable operation store, quotas, TTL/reaper, reconciliation | PARTIAL: Stagehand disabled for first release; live egress/final-URL/TTL/cleanup and unknown-start correlation unqualified |
+| S3 | Opt-in `Act` with one-use approvals, Rails 8 jobs, cancellation, negative tests | PARTIAL: read-only Rails jobs tested; offline Act simulation only; full live protocol deferred |
 | S4 | Full matrix, clean install, security/compat/license docs, human-approved release | PARTIAL (Gem builds and clean-installs; compatibility matrix + public release pending) |
 
 ## Functional-requirement evidence
@@ -43,10 +43,10 @@ proves remote browser egress and no live Stagehand call has been run.
 | FR-02 session/operation | `spec/ruby_llm/browser/engine_spec.rb`, `spec/ruby_llm/browser/fake_backend_spec.rb` | `spec/ruby_llm/browser/engine_spec.rb`, `spec/ruby_llm/browser/in_memory_operation_store_spec.rb` | PASS (fake lifecycle); live Stagehand NOT RUN | 2026-10-17 |
 | FR-03 read-only inspect | `spec/ruby_llm/browser/engine_spec.rb`, `spec/security/url_guard_spec.rb` | `spec/ruby_llm/browser/engine_spec.rb`, `spec/security/url_guard_spec.rb` | PASS (policy/engine); remote-browser egress NOT RUN | 2026-10-17 |
 | FR-04 structured extract | `spec/ruby_llm/browser/extract_spec.rb`, `spec/ruby_llm/browser/engine_spec.rb` | same | PASS (fake) | 2026-10-17 |
-| FR-05 approved Act | `spec/ruby_llm/browser/act_spec.rb`, `spec/ruby_llm/browser/engine_spec.rb` | same, `spec/security/release_audit_spec.rb` | PASS for simulation only; live Act refused, complete same-session protocol NOT IMPLEMENTED | 2026-10-18 |
+| FR-05 approved Act | `spec/ruby_llm/browser/act_spec.rb`, `spec/ruby_llm/browser/engine_spec.rb` | same, `spec/security/release_audit_spec.rb` | PASS for offline simulation only; live Act deferred, same-session protocol NOT IMPLEMENTED | 2026-10-18 |
 | FR-06 Rails jobs | `spec/rails/operation_job_spec.rb`, `spec/rails/reaper_spec.rb`, `spec/rails/active_record_operation_store_spec.rb`, `spec/rails/active_record_approval_store_spec.rb` | same (wrong actor, fenced-out worker, cancel-mid-session, cleanup_pending visible) | PASS (fake backend + in-memory SQLite) | 2026-10-17 |
-| FR-07 failure/budget/audit | `spec/ruby_llm/browser/engine_spec.rb` (budget, redaction), `spec/ruby_llm/browser/stagehand_backend_spec.rb` | `spec/ruby_llm/browser/stagehand_backend_spec.rb` (env override, SDK retry off, `cdp_url`), `spec/ruby_llm/browser/doctor_spec.rb` | PASS (offline); live Stagehand NOT RUN | 2026-10-17 |
-| FR-08 full delivery | Build/install evidence below, `spec/integration/documentation_spec.rb` | Core/Rails require, generator/migration and compatibility suites | Package checks PASS; full public release NO-GO, see audit | 2026-10-18 |
+| FR-07 failure/budget/audit | `spec/ruby_llm/browser/engine_spec.rb` (budget, redaction), `spec/ruby_llm/browser/stagehand_backend_spec.rb` | `spec/integration/stagehand_http_spec.rb` (stubbed HTTP; default live calls refused; cleanup ACK not closure), `spec/ruby_llm/browser/doctor_spec.rb` | Offline contract tests only; live Stagehand calls NOT RUN and unsupported | 2026-10-18 |
+| FR-08 full delivery | Build/install evidence below, `spec/integration/documentation_spec.rb` | Core/Rails require, generator/migration and compatibility suites | Package checks PASS; publication HOLD for H1/H2 and BR-03, see audit | 2026-10-18 |
 
 Run command for every row: `bundle exec rspec` (and `bundle exec rubocop`). Environment is
 the pinned local table above.
@@ -111,7 +111,7 @@ Markdown links, shipped files and executable offline README examples.
 | Live provider egress / TTL / billing / final URL | No live session authorized or run | NOT RUN |
 | PostgreSQL concurrency | No PostgreSQL fixture run | NOT RUN |
 | Expanded remote CI | Linux Ruby 3.2/3.3/3.4, RubyLLM 2.0.0/2.1.1, Rails 8.1 plus Rails 8.0 row | PASS for `0ec34d4`: seven test jobs plus build/install/advisory job |
-| Public release | BR-02, missing live Act protocol, BR-03/04 | NO-GO |
+| Public release | Independent H1/H2 and BR-03 naming/license review | HOLD; offline first-release scope selected |
 
 ### Stronger package-install evidence
 
@@ -151,6 +151,33 @@ completed successfully: all seven test jobs report `302 examples, 0 failures`, a
 the package job reports no known dependency advisories plus all three clean-install
 success markers. No RubyGems release or paid provider call was performed. Publication
 remains NO-GO for the other recorded gates.
+
+### Working-tree follow-up after the first-release scope decision (2026-10-18)
+
+The owner selected an offline read-only first release, deferred the full live Act
+protocol, and declined live provider calls. The Stagehand adapter now refuses every
+live operation and never reports its end-request acknowledgement as confirmed closure.
+This working-tree follow-up is local evidence; it is not covered by the CI run above.
+
+| Check | Result |
+| --- | --- |
+| `RUBOCOP_CACHE_ROOT=/private/tmp/ruby_llm_browser_rubocop_cache bundle exec rake` (Ruby 3.3.5, RubyLLM 2.1.1, AR/AJ 8.1.4, Stagehand 3.21.0, SQLite 2.10.0) | PASS: 305 examples, 0 failures; RuboCop inspected 94 files, 0 offenses |
+| `BUNDLE_GEMFILE=gemfiles/ruby_llm_2_0.gemfile bundle exec rspec` | PASS: 305 examples, 0 failures; RubyLLM 2.0.0 |
+| `BUNDLE_GEMFILE=gemfiles/rails_8_0.gemfile bundle exec rspec` | PASS: 305 examples, 0 failures; RubyLLM 2.0.0 and Rails/Active Job 8.0.5.1 |
+| `./docs/bin/build.sh` | PASS: Jekyll built the working tree |
+| `bundle exec rake build` | PASS: built `ruby_llm-browser-0.1.0.gem` |
+| `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, `RAILS_PACKAGE_PASS` |
+| Live provider egress, TTL, billing, and cleanup | NOT RUN; no live calls authorized |
+| Current working-tree remote CI | NOT RUN; the passing CI above is for `0ec34d4` |
+| RubyGems publication | NOT ATTEMPTED; H1/H2 and name/license release gates remain open |
+
+The clean package verifier needed network access to resolve gems from RubyGems. It ran
+from an isolated temporary GEM_HOME outside the checkout. Its network use was limited to
+gem installation; all example execution used the fake backend. The sandbox-only first
+attempt could not resolve `rubygems.org` and made no install; the permitted retry
+completed successfully. The verifier's SHA-256 output is captured in the local, ignored
+`pkg/SHA256SUMS` sidecar after the final build so this document does not contain a
+self-referential artifact checksum.
 
 ## Commit log
 

@@ -6,7 +6,7 @@ description: Local audit of release fixes, remaining publication blockers, and e
 
 # Release audit: 2026-10-18
 
-**Decision: NO-GO for public publication or production claims.**
+**Current decision: publication is on hold; the approved first-release scope is offline read-only.**
 
 The original 270-example suite was green, but source review and new negative tests
 found security/lifecycle defects and documentation errors. Those defects are hardened
@@ -49,28 +49,29 @@ Primary evidence: `spec/security/release_audit_spec.rb`,
 `spec/integration/{concurrent_store,stagehand_http,generator,documentation}_spec.rb`,
 and the existing engine/store/job suites. The source repository's `docs/WORK.md` records the commands and dependency versions.
 
-## Open publication blockers
+## Open live-support and publication gates
 
-### P1: Provider-side security and protocol qualification (BR-02)
+### P1: Provider-side security and protocol qualification (BR-02; blocks live support)
 
-The gem contains no browser firewall. `egress_isolation: :enforced` trusts a host
-assertion. No live provider egress, TTL, billing, or cleanup qualification was performed.
-Stagehand 3.21 allows null navigation results, so final-URL reporting must be verified
-against an actual server. Unknown starts without session IDs have no correlation API
-in this adapter and cannot be automatically proven closed. Local time alone never
-releases their quota. These are provider/host evidence gaps, not mock-test tasks.
+The gem contains no browser firewall. A custom backend's `egress_isolation: :enforced`
+capability is a declaration, not independent proof. `StagehandBackend` stays
+`:unverified` and disabled. No live provider egress, TTL, billing, or cleanup
+qualification was performed. Stagehand 3.21 allows null navigation results, so final-URL
+reporting must be verified against an actual server. Unknown starts without session IDs
+have no correlation API in this adapter and cannot be automatically proven closed. Local
+time alone never releases their quota. These are provider/host evidence gaps, not
+mock-test tasks.
 
-### P1: Full live Act protocol is not implemented
+### P1: Full live Act protocol is not implemented (deferred beyond the first release)
 
 The current Engine starts a new session for each call. Approval operation/session/page
 bindings are optional, and a digest of observed action candidates does not prove DOM
 or target revision. Keyword filters cannot prove semantic safety. Offline single-use
 store behavior is correct, but it is not the required same-session host decision.
-Live Act is now disabled instead of presenting this as production-safe. Implement the
-protocol or obtain an explicit read-only scope revision before calling the full spec
-complete. No unaudited opt-in flag should bypass this Engine refusal.
+Live Act is disabled instead of presenting this as production-safe. Implement the
+protocol in a later version. No unaudited opt-in flag should bypass this Engine refusal.
 
-### P2: Distribution ownership and approval (BR-03 / BR-04)
+### P2: Distribution ownership and approval (BR-03 / BR-04; publication blockers)
 
 RubyGems returned 404 for `ruby_llm-browser` on 2026-10-18: the name is unregistered,
 not reserved or owned. RubyGems account ownership and naming/affiliation clearance are
@@ -114,3 +115,27 @@ passed all seven compatibility jobs (302 examples each) and the build/install/ad
 job, including `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, and
 `RAILS_PACKAGE_PASS`. This closes the expanded-CI follow-up, not the live-provider or
 owner-approval gates. The source repository's `docs/RELEASE_ACTION_PLAN.md` records the owner decisions and follow-up actions.
+
+## Owner scope decision and qualification follow-up (2026-10-18)
+
+The owner selected a read-only first release, deferred the full live Act protocol to a
+later version, and explicitly declined live provider calls for this qualification. The
+built-in `StagehandBackend` now always reports egress as unverified and refuses live
+start, navigation, observation, extraction, and Act calls. The host cannot enable it with
+an `:enforced` assertion. The offline `FakeBackend` remains available.
+
+Browserbase's [Allowed Domains documentation](https://docs.browserbase.com/platform/browser/security/allowed-domains)
+describes top-frame navigation checks and does not establish blocking for iframes or
+subresources. This is insufficient evidence for the required browser-side egress policy.
+The [Update a Session endpoint](https://docs.browserbase.com/reference/api/update-a-session)
+accepts `REQUEST_RELEASE` and may return a session in `PENDING`; the [Get a Session endpoint](https://docs.browserbase.com/reference/api/get-a-session)
+exposes `status` and `endedAt`. Stagehand 3.21's `SessionEndResponse.success` only says
+the request succeeded, and its SDK does not expose that status lookup. The adapter may
+request an end, but it returns `false` and leaves the operation `cleanup_pending` until a
+future implementation can verify terminal status.
+
+No egress, TTL, billing, or cleanup live calls were made. BR-02 remains open for any
+future live backend, but it no longer blocks the offline-only first-release scope. BR-03
+and BR-04 still block RubyGems publication: naming/license decisions and independent H1
+plus owner H2 remain incomplete. The owner's request to publish is recorded; no push was
+attempted while these gates remain open.

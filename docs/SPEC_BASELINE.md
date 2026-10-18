@@ -38,10 +38,11 @@ separate specifications repository; this file records exactly which baseline was
 1. **Hooks:** `Tool#progress` and `Tool.defer` exist only in RubyLLM 2.1+. This Gem
    **feature-detects** them instead of raising the gemspec floor to `>= 2.1`, so the
    supported floor stays `>= 2.0, < 3` (matching the 2.0.0 / 2.1.x matrix).
-2. **Stagehand dependency:** declared as a runtime dependency (`~> 3.21`) because it is
-   the reference backend, but **required lazily** inside `StagehandBackend` so requiring
-   the Gem never reads `STAGEHAND_*`/`BROWSERBASE_*`/`MODEL_API_KEY` environment
-   variables and never triggers the SDK's local-server binary download.
+2. **Stagehand dependency:** declared as a runtime dependency (`~> 3.21`) for the
+   experimental adapter and cleanup path, but **required lazily** so requiring the Gem
+   never reads `STAGEHAND_*`/`BROWSERBASE_*`/`MODEL_API_KEY` environment variables or
+   triggers the SDK's local-server binary download. The adapter is unsupported for live
+   operations in the first release.
 3. **Rails:** optional, loaded only via `require "ruby_llm/browser/rails"`.
 4. **Frame and lib style:** explicit `require_relative` chain (no Zeitwerk loader) so the
    load graph is fully predictable and the no-Rails guarantee is easy to prove.
@@ -67,17 +68,27 @@ change, H1/H2 approval, live use authorization, or release clearance. See
 
 ## Outstanding blockers (carried from the spec baseline)
 
-These are **not** satisfied by this repository yet and block a public release or live use.
-They are reproduced verbatim in intent so they cannot be quietly dropped.
+These are **not** satisfied by this repository yet. BR-02 blocks live support; BR-03 and
+BR-04 block publication. They are reproduced in intent so they cannot be quietly dropped.
 
 - **BR-02 / live blocker:** a real browser provider must prove browser-side egress
   isolation across navigation, redirects, iframes, popups, subresources, WebSockets and
-  metadata routes before live mode is enabled. Ruby-side URL/DNS checks cannot prove it.
+  metadata routes before live mode is enabled. The first release keeps Stagehand
+  unsupported and makes no live calls. Ruby-side URL/DNS checks cannot prove egress.
 - **BR-03 / release blocker:** exact RubyGems name ownership, trademark/affiliation
   clearance and the upstream/transitive license chain must be confirmed. The name was
   unregistered at check time (not reserved or owned).
 - **BR-04:** formal independent H1 review, generated human-review artifact and owner H2
   are separate governance steps; nothing here claims them.
+
+## Owner scope decision (2026-10-18)
+
+The owner selected a read-only first release, deferred the full live Act protocol to a
+later version, and declined live provider calls. This narrows the first release to the
+offline `FakeBackend` and does not close BR-02 for later live support. The Stagehand
+adapter always reports unverified egress, refuses live start/navigation/observe/extract/
+Act, and treats an accepted end request as unconfirmed cleanup. Formal H1/H2 and the
+BR-03 naming/license review remain open.
 
 ## Evidence rule
 

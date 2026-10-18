@@ -27,9 +27,10 @@ Planned version: 0.1.0. No public release has been published.
 
 - Require patched CGI, DNS resolver, URI and zlib versions instead of accepting old
   vulnerable default gems on a clean Ruby installation.
-- Live Act is refused before session start pending the required same-session approval
-  protocol. Offline Act simulations remain available. Provider egress/TTL/billing and
-  owner name/license/governance gates still block public release.
+- The first-release scope is offline read-only. Stagehand remains unsupported until
+  provider egress and confirmed cleanup are qualified; no live calls were made. Full live
+  Act is deferred to a later version, while offline Act simulation remains available.
+- Independent H1/H2 review and name/license decisions still block public publication.
 - See `docs/RELEASE_AUDIT.md` for findings, mitigations and residual limits.
 
 The first implementation milestone. Everything below is proven offline against the fake
