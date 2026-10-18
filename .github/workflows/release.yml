@@ -91,6 +91,10 @@ jobs:
 
       - name: Publish the gem with RubyGems trusted publishing
         uses: rubygems/release-gem@v1
+        with:
+          # The action's experimental attestation patch preloads RubyGems before Bundler.
+          # That activates Ruby 3.3's default zlib and conflicts with the locked zlib gem.
+          attestations: false
 
       - name: Prepare release assets and notes
         run: |
