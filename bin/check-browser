@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "rbconfig"
+$stdout.sync = true
+root = File.expand_path("..", __dir__)
+artifacts = File.join(root, "tmp/browser", "#{Time.now.utc.strftime('%Y%m%dT%H%M%S')}-#{Process.pid}")
+FileUtils.mkdir_p(artifacts)
+puts "Browser artifacts: #{artifacts}"
+env = { "BUNDLE_GEMFILE" => File.join(root, "gemfiles/browser.gemfile"),
+        "BROWSER_TEST" => "1", "BROWSER_ARTIFACTS" => artifacts }
+abort "Browser checks failed; inspect #{artifacts}" unless system(env, "bundle", "exec", RbConfig.ruby,
+                                                                 "-S", "rspec", "test/browser", chdir: root)
+abort "Browser checks produced no screenshots" if Dir[File.join(artifacts, "*.png")].empty?

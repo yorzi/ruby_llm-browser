@@ -1,0 +1,6 @@
+# frozen_string_literal: true
+
+eval_gemfile "../Gemfile"
+gem "capybara", "~> 3.40"
+gem "selenium-webdriver", "~> 4.51"
+gem "puma", "~> 7.2"

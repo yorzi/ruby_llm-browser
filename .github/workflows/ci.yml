@@ -47,6 +47,27 @@ jobs:
           bundle exec ruby examples/plain_ruby.rb
           bundle exec ruby examples/rails_adapter.rb
 
+  browser:
+    name: Offline Chrome workflows
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: gemfiles/browser.gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - run: bin/check-browser
+      - name: Retain fixture screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: tmp/browser/**/*.png
+          retention-days: 7
+          if-no-files-found: ignore
+
   build:
     name: Build gem
     runs-on: ubuntu-latest

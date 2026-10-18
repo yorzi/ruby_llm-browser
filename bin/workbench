@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Foreground, loopback-only development host. Ctrl-C stops the server.
+root = File.expand_path("..", __dir__)
+port = Integer(ENV.fetch("PORT", "4024"), 10)
+abort "PORT must be between 1024 and 65535" unless (1024..65535).cover?(port)
+exec({ "BUNDLE_GEMFILE" => File.join(root, "gemfiles/browser.gemfile") }, "bundle", "exec", "puma",
+     "--bind", "tcp://127.0.0.1:#{port}", File.join(root, "dev/config.ru"), chdir: root)

@@ -1,5 +1,20 @@
 # AGENTS.md
 
+## Development and verification
+
+- Use `bin/check` for the offline suite, lint, supported alternate bundles, and examples.
+  Run database suites sequentially. Add a failing public-contract test before changing behavior.
+- `dev/workbench.rb` is the single maintained offline browser fixture. Use `bin/workbench`
+  for manual review and `bin/check-browser` for Chrome E2E tests and screenshots.
+  Browser dependencies stay in `gemfiles/browser.gemfile`, outside runtime dependencies.
+- For UI changes, inspect success and failure screenshots, plus keyboard and mobile behavior.
+  A screenshot is review evidence, not an assertion. Convert reproduced failures into tests.
+- For release candidates, run `bin/check --browser --package` and build the docs.
+  Record exact results and untested boundaries in the candidate validation note.
+- Bind task-owned services and driver probes to loopback. Stop all task-owned servers,
+  browsers, drivers, and watchers before finishing. Never pass credentials in process arguments.
+- Offline fixture results do not qualify live browser egress, cleanup, TTL, or billing.
+
 ## Docs
 
 The documentation site lives in `docs/`: Jekyll with the jekyll-vitepress-theme, in four collections (`_getting_started`, `_core_features`, `_advanced`, `_reference`). Preview it with `docs/bin/serve.sh` and build it with `docs/bin/build.sh`.

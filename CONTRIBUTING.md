@@ -19,11 +19,15 @@ Thanks for helping. This is an unofficial community extension for
 
 ```bash
 bin/setup          # bundle install
+bin/check          # offline suite, lint, alternate bundles, and examples
 bundle exec rake   # specs + rubocop
 bundle exec rspec  # specs only
 bundle exec bundle-audit check --update
 bundle exec rubocop -A   # autocorrect style
 ```
+
+For the offline workbench, real Chrome tests, screenshots, and installed-package
+checks, follow [development and testing](docs/_advanced/development-and-testing.md).
 
 ## Changing behaviour
 

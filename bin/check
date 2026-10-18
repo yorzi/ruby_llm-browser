@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Run supported bundles sequentially. Browser and clean-install checks are opt-in.
+require "rbconfig"
+$stdout.sync = true
+root = File.expand_path("..", __dir__)
+Dir.chdir(root)
+ENV["RUBOCOP_CACHE_ROOT"] ||= File.join(root, "tmp/rubocop")
+abort "Usage: bin/check [--browser] [--package]" unless (ARGV - %w[--browser --package]).empty?
+run = lambda do |*command|
+  puts "+ #{command.join(' ')}"
+  abort "Check failed: #{command.join(' ')}" unless system(*command)
+end
+run.call("bundle", "exec", "rake")
+%w[ruby_llm_2_0 rails_8_0].each do |name|
+  abort "#{name} failed" unless system({ "BUNDLE_GEMFILE" => "gemfiles/#{name}.gemfile" }, "bundle", "exec", "rspec")
+end
+%w[plain_ruby rails_adapter].each { |name| run.call("bundle", "exec", "ruby", "examples/#{name}.rb") }
+run.call(RbConfig.ruby, "bin/check-browser") if ARGV.include?("--browser")
+if ARGV.include?("--package")
+  run.call("bundle", "exec", "rake", "build")
+  run.call("bundle", "exec", "ruby", "bin/verify-package", "--rails", "--audit")
+end
