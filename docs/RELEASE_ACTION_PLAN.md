@@ -7,6 +7,9 @@ llms: false
 
 # Release action plan
 
+This is the historical 0.1.0 release record. Use the
+[roadmap to 1.0]({% link _reference/roadmap.md %}) for upcoming development.
+
 The owner selected the offline-only first release as `0.1.0`, authorized its publication,
 and requested tag-based release automation. Version `0.1.0` is published. This plan records
 the outcome and preserves the live-provider limits for future work.

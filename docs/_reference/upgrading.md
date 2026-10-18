@@ -25,7 +25,7 @@ to migrate from. Install it with `bundle add ruby_llm-browser --version "~> {{ s
 
 If you ran an earlier development Rails generator, do not drop existing operation data
 or rerun a create-table migration. Follow the additive migration instructions under
-"Upgrading an earlier development snapshot" in the [Rails guide]({% link RAILS.md %}). Drain workers during the migration and do not reuse idempotency keys for legacy rows that lack request digests.
+"Upgrading an earlier development snapshot" in the [Rails guide]({% link _advanced/rails-integration.md %}). Drain workers during the migration and do not reuse idempotency keys for legacy rows that lack request digests.
 
 ## Next Steps
 

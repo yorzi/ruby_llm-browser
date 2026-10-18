@@ -1,7 +1,7 @@
 ---
 layout: default
 title: API Reference
-nav_order: 1
+nav_order: 4
 guide: false
 description: Find the RubyLLM::Browser classes for tools, policy, results, backends, and Rails jobs.
 ---
@@ -24,6 +24,6 @@ The [generated RDoc reference]({{ '/api/' | relative_url }}) documents classes a
 | Persist operation or approval state | `OperationStore`, `ApprovalStore` and their implementations |
 | Run Rails background jobs and cleanup | `RubyLLM::Browser::Rails::OperationJob`, `Reaper` |
 
-Start with [Getting Started]({% link _getting_started/getting-started.md %}) for a runnable offline example. The [API and configuration guide]({% link API.md %}) explains inputs, results, limits, and errors.
+Start with [Getting Started]({% link _getting_started/getting-started.md %}) for a runnable offline example. The [API and configuration guide]({% link _reference/api-and-configuration.md %}) explains inputs, results, limits, and errors.
 
 The reference is generated from source comments. Build it locally with `docs/bin/build-api.sh tmp/api`.

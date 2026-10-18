@@ -12,6 +12,8 @@ RSpec.describe "documentation and package contents" do
     expected = %w[
       README.md CHANGELOG.md LICENSE.txt NOTICE.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md
       docs/README.md docs/API.md docs/RAILS.md docs/SECURITY_MODEL.md docs/RELEASING.md
+      docs/_reference/api-and-configuration.md docs/_reference/roadmap.md
+      docs/_advanced/rails-integration.md
       docs/RELEASE_AUDIT.md docs/WORK.md docs/SPEC_BASELINE.md
       examples/plain_ruby.rb examples/rails_adapter.rb
       lib/generators/ruby_llm/browser/templates/create_ruby_llm_browser_tables.rb.tt

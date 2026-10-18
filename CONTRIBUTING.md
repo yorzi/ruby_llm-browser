@@ -29,7 +29,10 @@ bundle exec rubocop -A   # autocorrect style
 
 - Add a failing spec first, including the negative/denial case.
 - Update `CHANGELOG.md` under `Unreleased`.
-- Update `docs/SECURITY_MODEL.md` or `README.md` if a boundary or public API moved.
+- Update the relevant site guide in `docs/` when a boundary or public API changes.
+  Record breaking changes in `docs/_reference/upgrading.md`. Keep the README brief;
+  use [the documentation index](docs/README.md) for source locations and
+  [the roadmap](docs/_reference/roadmap.md) for proposed release scope.
 - Keep runnable examples and the package's local links green in
   `spec/integration/documentation_spec.rb`.
 - Run both alternate bundles in `gemfiles/` when changing Tool or Rails integration.

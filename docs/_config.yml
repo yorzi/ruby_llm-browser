@@ -94,6 +94,8 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - README.md
+  - API.md
+  - RAILS.md
   - RELEASE_ACTION_PLAN.md
   - SPEC_BASELINE.md
   - WORK.md

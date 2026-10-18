@@ -113,5 +113,5 @@ qualification. Cleanup and TTL are best-effort, and cost values are advisory.
 
 ## Next steps
 
-- Follow [Rails recovery]({% link RAILS.md %}) to schedule cleanup and protect status access.
+- Follow [Rails recovery]({% link _advanced/rails-integration.md %}) to schedule cleanup and protect status access.
 - Review [the release audit]({% link RELEASE_AUDIT.md %}) for evidence and remaining blockers.

@@ -127,5 +127,5 @@ workflow `release.yml`, and environment `release` before the first tag.
 ## Next steps
 
 - Review the requirement evidence in the source repository's `docs/WORK.md` and the [remaining audit findings]({% link RELEASE_AUDIT.md %}).
-- Follow the source repository's `docs/RELEASE_ACTION_PLAN.md` for the selected scope and
-  future version workflow.
+- Follow the [roadmap to 1.0]({% link _reference/roadmap.md %}) for proposed version scope.
+  The source repository's `docs/RELEASE_ACTION_PLAN.md` preserves the 0.1.0 release record.
