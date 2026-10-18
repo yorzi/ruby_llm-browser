@@ -1,8 +1,10 @@
 ---
 layout: default
-title: What's New
+title: What's New in 0.2
+redirect_from:
+  - /whats-new/
 nav_order: 4
-description: Review the current development changes before updating an application.
+description: Use the read-only tool factory and backend-aware diagnostics in this release.
 ---
 
 # {{ page.title }}
@@ -17,7 +19,7 @@ After reading this guide, you will know:
 
 ## Read-only Tool Factory
 
-The current development version adds a short registration path:
+You can register the read-only tools in one call:
 
 ```ruby
 chat.with_tools(*RubyLLM::Browser.tools(context: context, schema: schema))
@@ -42,4 +44,4 @@ Use `bin/check` for offline contracts, lint, alternate bundles, and examples. Us
 [development guide]({% link _advanced/development-and-testing.md %}) explains setup,
 package verification, and the limits of this evidence.
 
-These are unreleased source changes. Stagehand and live Act remain unsupported.
+Stagehand and live Act remain unsupported. This release remains offline-only.

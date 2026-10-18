@@ -8,5 +8,7 @@
   url: /api-reference/
   collections:
     - reference
+- title: "What's New"
+  url: /whats-new-in-0-2/
 - title: Releases
   url: https://github.com/yorzi/ruby_llm-browser/releases

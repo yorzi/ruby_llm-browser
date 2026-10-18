@@ -35,7 +35,7 @@ features:
 
 ## Before You Install
 
-The first release is `0.1.0` and supports only the offline `FakeBackend`. The built-in
+Version `{{ site.version }}` supports only the offline `FakeBackend`. The built-in
 Stagehand adapter is unsupported until provider egress and confirmed cleanup are
 qualified. The full live Act protocol is deferred to a later version.
 
@@ -70,8 +70,7 @@ schema = {
   "required" => [ "title" ], "additionalProperties" => false
 }
 
-inspect_tool = RubyLLM::Browser::Inspect.new(context: context)
-extract_tool = RubyLLM::Browser::Extract.new(context: context, schema: schema)
+inspect_tool, extract_tool = RubyLLM::Browser.tools(context: context, schema: schema)
 puts inspect_tool.execute(url: "https://docs.example.com/")[:status] # => ok
 puts extract_tool.execute(url: "https://docs.example.com/")[:data]   # => {"title"=>"Example"}
 ```

@@ -18,7 +18,7 @@ After reading this guide, you will know:
 
 ## Installation
 
-{% if site.docs_unreleased %}This guide follows the unreleased `{{ site.version }}` source.
+{% if site.docs_unreleased %}This guide follows `main` at source version `{{ site.version }}`.
 Install the default branch to use the APIs documented here:
 
 ```sh

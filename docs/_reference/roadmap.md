@@ -22,7 +22,7 @@ approved public page or extracts schema-checked data, receives a bounded result 
 provenance, and can account for the browser session through cleanup. It works in plain
 Ruby and through the optional Rails adapter.
 
-Version 0.1.0 provides the offline foundation: Inspect, Extract, URL policy, bounded
+Version 0.1.0 introduced the offline foundation: Inspect, Extract, URL policy, bounded
 results, operation bookkeeping, Rails jobs, and Act simulation. It does not provide a
 supported live backend. The current Stagehand adapter refuses live operations. Rails
 jobs track state but do not durably deliver result bodies.
@@ -48,9 +48,8 @@ feedback to settle the public API.
 
 ### 0.2.0: Two Small Features
 
-The current local source implements both features below. Version `0.2.0` remains an
-unreleased candidate; stable users stay on `0.1.0`. See
-[What's New]({% link _getting_started/whats-new.md %}) for usage and
+Version `0.2.0` adds both features below. Later milestones remain proposed scope. See
+[What's New]({% link _getting_started/whats-new-in-0-2.md %}) for usage and
 [development and testing]({% link _advanced/development-and-testing.md %}) for validation.
 
 1. Add the read-only tool factory `RubyLLM::Browser.tools(context:, schema:)`.
@@ -68,8 +67,8 @@ provider request, credential discovery, or Rails load. Test Doctor with fake and
 unsupported live backends. Update the relevant guides and changelog with the features.
 
 Do not add a CLI, a context builder, new database tables, or live support in this slice.
-The factory and Doctor are implemented in separate commits. Candidate validation
-precedes any separately authorized push, tag, or publication.
+The factory and Doctor are implemented in separate commits. Local and remote
+validation precede the release tag and publication.
 
 ### 0.3.0: Complete the Rails Result Path
 

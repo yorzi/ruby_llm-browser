@@ -2,42 +2,63 @@
 layout: default
 title: Upgrading
 nav_order: 2
-description: Check the supported upgrade path before moving a RubyLLM::Browser application to a new version.
+description: Upgrade from 0.1.0 while preserving tool registration, diagnostics, and operation data.
 ---
 
 # {{ page.title }}
 
 {{ page.description }}
-{: .fs-6 .fw-300 }
 
 After reading this guide, you will know:
 
-* What changed in the first public release.
-* Where to find migration steps for earlier development snapshots.
-* What evidence must exist before a release tag is treated as supported.
+- How to update an application from 0.1.0.
+- Which tool and diagnostic contracts remain compatible.
+- How to preserve data from earlier development snapshots.
 
-## Public Releases
+## Upgrade from 0.1.0
 
-The current development changes are additive: `Browser.tools(context:, schema:)`
-preserves the individual tool constructors, and Doctor adds `mode` while retaining
-`ok`, `summary`, and `checks`. Doctor check names now depend on the backend; do not
-assume every report includes Stagehand or credential checks, or rely on check order.
-There is no database migration or new runtime dependency. See
-[What's New]({% link _getting_started/whats-new.md %}) for details.
+Update your Gemfile and bundle:
 
-{% if site.docs_unreleased %}Version `{{ site.stable_version }}` remains the latest public
-release. The current source candidate is `{{ site.version }}` and has not been published.
-{% else %}Version `{{ site.version }}` is the first public release. It has no earlier public
-version to migrate from. Install it with `bundle add ruby_llm-browser --version "~> {{ site.version }}"`.
-{% endif %}
+```ruby
+gem "ruby_llm-browser", "~> {{ site.version }}"
+```
+
+```sh
+bundle update ruby_llm-browser
+```
+
+There is no database migration or new runtime dependency. Keep existing operation and
+approval records. The individual Inspect and Extract constructors remain supported.
+You can optionally replace their registration with:
+
+```ruby
+chat.with_tools(*RubyLLM::Browser.tools(context: context, schema: schema))
+```
+
+The host still supplies the context and extraction schema. The factory never adds Act.
+
+## Read Doctor Reports by Name
+
+Doctor adds `mode` while retaining `ok`, `summary`, and `checks`. Check names now depend
+on the backend. Do not require Stagehand or credential checks in every report, and do
+not rely on check order. FakeBackend diagnostics skip provider environment and SDK
+checks. Stagehand still reports a failure; `mode: :live` does not enable it.
+
+Read [Checking Configuration]({% link _core_features/diagnostics.md %}) for the report
+fields. No live browser provider is supported by this release.
 
 ## Earlier Development Snapshots
 
-If you ran an earlier development Rails generator, do not drop existing operation data
-or rerun a create-table migration. Follow the additive migration instructions under
-"Upgrading an earlier development snapshot" in the [Rails guide]({% link _advanced/rails-integration.md %}). Drain workers during the migration and do not reuse idempotency keys for legacy rows that lack request digests.
+If you used an earlier development Rails generator, preserve operation data and follow
+the additive migration instructions in the
+[Rails guide]({% link _advanced/rails-integration.md %}). Drain workers during migration;
+do not reuse idempotency keys for legacy rows without request digests.
+
+For the previous version's instructions, read the
+[0.1.0 upgrading guide](https://github.com/yorzi/ruby_llm-browser/blob/v0.1.0/docs/_reference/upgrading.md).
 
 ## Next Steps
 
-* Review the [release history]({% link _reference/release-history.md %}) for version records.
-* Review the [release audit]({% link RELEASE_AUDIT.md %}) before enabling a live backend.
+- Read [What's New in 0.2]({% link _getting_started/whats-new-in-0-2.md %}).
+- Review [release history]({% link _reference/release-history.md %}) and
+  [live-backend qualification]({% link _advanced/live-backend-qualification.md %}).
