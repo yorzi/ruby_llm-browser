@@ -22,6 +22,12 @@ RSpec.describe "offline development workbench" do
     expect(response.body).to include("NOT_AUTHORIZED", "Fake session starts: 0")
   end
 
+  it "reports Stagehand as blocked without exposing its fixture credentials" do
+    response = submit("stagehand_doctor")
+    expect(response.body).to include("configuration blocked", "Stagehand backend is unsupported")
+    expect(response.body).not_to include("fixture-not-a-real-key")
+  end
+
   it "escapes submitted text and prevents non-local or forged submissions" do
     response = submit("inspect", url: '\"><script>alert(1)</script>')
     expect(response.body).not_to include("<script>")

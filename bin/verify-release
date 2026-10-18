@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Metadata verification only. This command never tags, pushes, or publishes.
+require "yaml"
+require_relative "../lib/ruby_llm/browser/version"
+abort "Usage: bin/verify-release [--candidate]" unless (ARGV - [ "--candidate" ]).empty?
+root = File.expand_path("..", __dir__)
+Dir.chdir(root)
+version = RubyLLM::Browser::VERSION
+config = YAML.load_file("docs/_config.yml")
+spec = Gem::Specification.load("ruby_llm-browser.gemspec")
+abort "Docs version does not match #{version}" unless config["version"].to_s == version
+abort "Package version does not match #{version}" unless spec&.version&.to_s == version
+changelog = File.read("CHANGELOG.md")
+if ARGV.include?("--candidate")
+  abort "Candidate docs must be marked unreleased" unless config["released"] == false
+  abort "Missing Unreleased changelog" unless changelog.match?(/^## \[Unreleased\]$/)
+else
+  abort "Docs are not marked released" unless config["released"] == true
+  abort "Missing dated #{version} changelog" unless changelog.match?(/^## \[#{Regexp.escape(version)}\] - \d{4}-\d{2}-\d{2}$/)
+  if ENV["GITHUB_REF_TYPE"] == "tag"
+    abort "Tag does not match v#{version}" unless ENV["GITHUB_REF_NAME"] == "v#{version}"
+  end
+end
+abort "Development files are packaged" if spec.files.any? { |file| file.match?(%r{\A(?:dev/|test/|spec/|gemfiles/|tmp/|docs/_site/|docs/evidence/)}) }
+puts "#{ARGV.include?('--candidate') ? 'CANDIDATE' : 'RELEASE'}_METADATA_PASS version=#{version} files=#{spec.files.size}"

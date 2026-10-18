@@ -16,6 +16,12 @@ artifact = supplied ? File.expand_path(supplied) : File.expand_path("../pkg/#{ar
 abort "Build the artifact first: bundle exec rake build" unless File.file?(artifact)
 base = ENV.fetch("TMPDIR", Dir.tmpdir)
 home = Dir.mktmpdir("browser-package-", base)
+# Test a private snapshot so another build cannot replace the artifact mid-run.
+snapshot = File.join(home, File.basename(artifact))
+File.binwrite(snapshot, File.binread(artifact))
+artifact = snapshot
+puts "SHA256=#{Digest::SHA256.file(artifact).hexdigest}"
+$stdout.flush
 environment = {
   "GEM_HOME" => home, "GEM_PATH" => home, "RUBYOPT" => nil, "RUBYLIB" => nil,
   "BUNDLE_GEMFILE" => nil, "BUNDLE_BIN_PATH" => nil
@@ -39,9 +45,11 @@ verification = lambda do
     gem_home = File.realpath(ENV.fetch("GEM_HOME"))
     gem_path = File.realpath(specification.full_gem_path)
     raise "activated outside the isolated GEM_HOME" unless gem_path.start_with?("#{gem_home}#{File::SEPARATOR}")
-    %w[docs/API.md docs/RAILS.md docs/RELEASE_AUDIT.md examples/plain_ruby.rb].each do |path|
+    %w[docs/_reference/api-and-configuration.md docs/_advanced/rails-integration.md
+       docs/_core_features/diagnostics.md docs/RELEASE_AUDIT.md examples/plain_ruby.rb].each do |path|
       raise "missing #{path}" unless File.file?(File.join(specification.full_gem_path, path))
     end
+    raise "development fixture packaged" unless specification.files.grep(%r{\A(?:dev|test|spec|gemfiles|tmp)/}).empty?
     load File.join(specification.full_gem_path, "examples/plain_ruby.rb")
     File.write(File.join(ENV.fetch("GEM_HOME"), "activated-versions.json"),
                JSON.pretty_generate(Gem.loaded_specs.transform_values { |s| s.version.to_s }))
@@ -88,5 +96,4 @@ if defined?(Bundler)
 else
   verification.call
 end
-puts "SHA256=#{Digest::SHA256.file(artifact).hexdigest}"
 puts "EVIDENCE=#{home}"

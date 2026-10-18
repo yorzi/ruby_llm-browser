@@ -3,6 +3,7 @@
 
 # Run supported bundles sequentially. Browser and clean-install checks are opt-in.
 require "rbconfig"
+require "yaml"
 $stdout.sync = true
 root = File.expand_path("..", __dir__)
 Dir.chdir(root)
@@ -19,6 +20,8 @@ end
 %w[plain_ruby rails_adapter].each { |name| run.call("bundle", "exec", "ruby", "examples/#{name}.rb") }
 run.call(RbConfig.ruby, "bin/check-browser") if ARGV.include?("--browser")
 if ARGV.include?("--package")
+  flags = YAML.load_file("docs/_config.yml").fetch("released") ? [] : [ "--candidate" ]
+  run.call(RbConfig.ruby, "bin/verify-release", *flags)
   run.call("bundle", "exec", "rake", "build")
   run.call("bundle", "exec", "ruby", "bin/verify-package", "--rails", "--audit")
 end

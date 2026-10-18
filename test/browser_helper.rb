@@ -41,6 +41,8 @@ RSpec.configure do |config|
       name = example.description.gsub(/[^a-zA-Z0-9_-]/, "_")
       page.save_screenshot(File.join(Capybara.save_path, "#{name}-#{example.exception ? 'failed' : 'passed'}.png"))
     rescue StandardError => error
+      raise unless example.exception
+
       warn "Screenshot unavailable: #{error.class}: #{error.message}"
     ensure
       session&.driver&.quit

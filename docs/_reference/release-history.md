@@ -11,7 +11,8 @@ description: Follow release tags and their documentation for RubyLLM::Browser.
 {{ page.description }}
 {: .fs-6 .fw-300 }
 
-{% if site.docs_unreleased %}The current source build follows `main`. The latest stable release is `0.1.0`.
+{% if site.docs_unreleased %}The current source build follows `main` for the unreleased
+`{{ site.version }}` candidate. The latest stable release is `{{ site.stable_version }}`.
 {% else %}This documentation describes the `{{ site.version }}` release. Use the tag and
 release notes to identify the exact source for this version.
 {% endif %}

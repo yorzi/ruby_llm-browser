@@ -47,6 +47,7 @@ BUNDLE_GEMFILE=gemfiles/rails_8_0.gemfile bundle install
 BUNDLE_GEMFILE=gemfiles/rails_8_0.gemfile bundle exec rspec
 
 bundle exec rake build
+bin/verify-release --candidate # for unreleased development candidates
 bundle exec ruby bin/verify-package --rails --audit
 ```
 
@@ -101,10 +102,16 @@ made for `0.1.0`.
 ## Releasing a version
 
 For a later version, update the gem version in `lib/ruby_llm/browser/version.rb` and the
-documentation version in `docs/_config.yml` to the same value. Keep `released: true` on
-`main` after the first public version tag. The documentation builder uses release tags
+documentation version in `docs/_config.yml` to the same value. Keep `released: false`
+while preparing a candidate. Set it to `true` and update `stable_version` when the
+owner authorizes a release. The documentation builder uses release tags
 for the stable site and builds the working tree under `/next/`. Add a matching release
 entry to `CHANGELOG.md` and `docs/_reference/release-history.md`.
+
+During candidate development, keep changes under `Unreleased` in the changelog and
+run `bin/verify-release --candidate`. Before tagging, move them to a dated release
+section and run `bin/verify-release` without that flag. The tag workflow requires
+released metadata; local candidate verification cannot enable publication.
 
 Run the checks above, review the package contents and push the completed commit to
 `main`. Then create and push a matching tag, for example `v0.2.0` for gem version

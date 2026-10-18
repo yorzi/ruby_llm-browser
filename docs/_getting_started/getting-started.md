@@ -18,7 +18,16 @@ After reading this guide, you will know:
 
 ## Installation
 
-The stable release is `{{ site.version }}`. Add it to your Gemfile:
+{% if site.docs_unreleased %}This guide follows the unreleased `{{ site.version }}` source.
+Install the default branch to use the APIs documented here:
+
+```sh
+bundle add ruby_llm-browser --git https://github.com/yorzi/ruby_llm-browser --branch main
+```
+
+The latest stable release is `{{ site.stable_version }}`; select its documentation
+from the version menu before installing that release.
+{% else %}The stable release is `{{ site.version }}`. Add it to your Gemfile:
 
 ```ruby
 gem "ruby_llm-browser", "~> {{ site.version }}"
@@ -29,6 +38,7 @@ For unreleased development changes, install the default branch instead:
 ```sh
 bundle add ruby_llm-browser --git https://github.com/yorzi/ruby_llm-browser --branch main
 ```
+{% endif %}
 
 Use Ruby 3.2 or later. The gem supports RubyLLM `>= 2.0, < 3` and pins Stagehand to the
 3.21.x series. Rails is optional and is not loaded by the core entry point. See

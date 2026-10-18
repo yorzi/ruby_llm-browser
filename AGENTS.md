@@ -10,6 +10,7 @@
 - For UI changes, inspect success and failure screenshots, plus keyboard and mobile behavior.
   A screenshot is review evidence, not an assertion. Convert reproduced failures into tests.
 - For release candidates, run `bin/check --browser --package` and build the docs.
+  Run `python3 scripts/check_docs_site.py` after the build to check generated links.
   Record exact results and untested boundaries in the candidate validation note.
 - Bind task-owned services and driver probes to loopback. Stop all task-owned servers,
   browsers, drivers, and watchers before finishing. Never pass credentials in process arguments.

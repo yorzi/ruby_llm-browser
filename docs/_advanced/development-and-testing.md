@@ -42,7 +42,8 @@ bin/workbench
 The single fixture in `dev/workbench.rb` runs the real Ruby tools with FakeBackend,
 a deterministic resolver, and an in-memory operation store. Inspect and Extract show
 their returned hashes and fake start/cleanup counts. Enter an unapproved host to
-exercise a denial, or run Doctor without starting a provider session.
+exercise a denial, run offline Doctor, or check that Stagehand remains blocked. The
+Stagehand diagnostic uses synthetic fixture credentials and never calls the provider.
 
 The host serves local HTML and CSS, escapes returned content, requires a form token,
 and accepts loopback Host values only. It is a development fixture, not a production
@@ -63,7 +64,7 @@ go into the printed, ignored `tmp/browser/` directory. The runner fails if tests
 or no screenshot is produced. CI retains fixture screenshots for seven days.
 
 Browser scenarios cover inspect/extract, denial before dispatch, keyboard recovery at
-a 390px device viewport, and Doctor output. Capture screenshots before closing the
+a 390px device viewport, and offline/blocked-Stagehand Doctor output. Capture screenshots before closing the
 active session, including on assertion failures. Inspect failure artifacts before
 retrying. Screenshots support visual review; assertions establish the expected behavior.
 
@@ -76,6 +77,7 @@ Stop manual previews and verify no task-owned service remains after your review.
 
 ```sh
 bin/check --browser --package
+bin/verify-release --candidate
 docs/bin/build.sh
 ```
 
@@ -84,6 +86,12 @@ installs into an empty GEM_HOME outside the checkout, resolves dependencies from
 registry, runs shipped examples, tests the generated migration, and audits the activated
 runtime. Refresh the advisory database first with `bundle exec bundle-audit check --update`.
 Package verification needs registry access; offline test success cannot replace it.
+
+`bin/verify-release --candidate` checks version alignment, the Unreleased changelog,
+the unreleased docs flag, and package exclusions. Without `--candidate`, it requires
+released docs and a dated changelog; the tag workflow never passes the candidate flag.
+The install verifier copies the input artifact before testing and prints that snapshot's
+SHA-256. A later build cannot replace the file under verification.
 
 Record the exact artifact hash, dependency versions, checks, and not-run boundaries in
 the candidate validation note. Local browser tests prove fixture application wiring.

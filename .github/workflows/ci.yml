@@ -78,7 +78,13 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
       - name: Build
-        run: bundle exec rake build
+        run: |
+          if ruby -ryaml -e 'exit(YAML.load_file("docs/_config.yml").fetch("released") ? 0 : 1)'; then
+            ruby bin/verify-release
+          else
+            ruby bin/verify-release --candidate
+          fi
+          bundle exec rake build
       - name: Check known dependency advisories
         run: bundle exec bundle-audit check --update
       - name: Install and verify the actual package and activated runtime gems

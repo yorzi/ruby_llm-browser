@@ -99,13 +99,15 @@ exclude:
   - RELEASE_ACTION_PLAN.md
   - SPEC_BASELINE.md
   - WORK.md
+  - evidence
 
 # The language of code examples; `project-docs` uses it for new pages.
 code_language: ruby
 
 # Values that change between releases. Pages read them as {{ site.version }}
-# and {{ site.examples.NAME }}. Keep `released: true` on main after the first
-# version tag is published. The docs builder reads stable docs from the latest tag.
-released: true
-version: "0.1.0"
+# and {{ site.examples.NAME }}. Candidates remain unreleased; the docs builder
+# reads stable docs from the latest release tag and main under /next/.
+released: false
+version: "0.2.0"
+stable_version: "0.1.0"
 examples: {}

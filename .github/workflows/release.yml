@@ -30,19 +30,8 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
 
-      - name: Match the tag to the gem version
-        run: |
-          ruby -Ilib -ryaml - <<'RUBY'
-          require "ruby_llm/browser/version"
-
-          version = RubyLLM::Browser::VERSION
-          expected = "v#{version}"
-          tag = ENV.fetch("GITHUB_REF_NAME")
-          abort "Tag #{tag} does not match #{expected}" unless tag == expected
-
-          docs_version = YAML.load_file("docs/_config.yml").fetch("version").to_s
-          abort "Docs version #{docs_version} does not match gem version #{version}" unless docs_version == version
-          RUBY
+      - name: Verify released metadata and matching tag
+        run: ruby bin/verify-release
 
       - name: Require a changelog section for this version
         run: |

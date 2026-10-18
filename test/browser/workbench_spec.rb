@@ -39,4 +39,14 @@ RSpec.describe "offline workbench", type: :feature do
     expect(page).not_to have_css("#result", text: "BROWSERBASE_API_KEY")
     expect(page).to have_css("#dispatch", text: "Fake session starts: 0")
   end
+
+  it "keeps Stagehand blocked even though the SDK is installed" do
+    visit "/"
+    click_button "Check Stagehand"
+    expect(page).to have_css("#status", text: "configuration blocked", exact_text: true)
+    expect(page).to have_css("#result", text: '"mode": "live"')
+    expect(page).to have_css("#result", text: "Stagehand backend is unsupported")
+    expect(page).not_to have_css("#result", text: "fixture-not-a-real-key")
+    expect(page).to have_css("#dispatch", text: "Fake session starts: 0")
+  end
 end

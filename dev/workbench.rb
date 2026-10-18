@@ -48,6 +48,12 @@ class BrowserWorkbench
     when "inspect" then inspect.call(url: url)
     when "extract" then extract.call(url: url)
     when "doctor" then RubyLLM::Browser::Doctor.new(backend: backend, env: {}).report
+    when "stagehand_doctor"
+      stagehand = RubyLLM::Browser::StagehandBackend.new(
+        browserbase_api_key: "fixture-not-a-real-key", model_api_key: "fixture-not-a-real-key",
+        model_name: "fixture-model", env: {}
+      )
+      RubyLLM::Browser::Doctor.new(backend: stagehand, env: {}).report
     else { status: "error", error: { code: "INVALID_INPUT" } }
     end
     { data: data, starts: backend.call_count(:start), closes: backend.call_count(:end_session) }
@@ -80,7 +86,8 @@ class BrowserWorkbench
       <form method="post" action="/"><input type="hidden" name="token" value="#{@token}">
       <label for="url">Page URL</label><input id="url" type="text" name="url" value="#{escape(url)}" required>
       <button name="operation" value="inspect">Inspect</button><button name="operation" value="extract">Extract</button>
-      <button name="operation" value="doctor">Run Doctor</button></form>
+      <button name="operation" value="doctor">Run Doctor</button>
+      <button name="operation" value="stagehand_doctor">Check Stagehand</button></form>
       <p>Allowed host: <code>docs.example.com</code>. Try another host to inspect a denial.</p></section>
       #{result_html(result)}
       <p>Fixture results verify application wiring. They do not qualify provider egress, cleanup, TTL, or billing.</p>

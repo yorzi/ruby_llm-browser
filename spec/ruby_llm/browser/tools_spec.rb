@@ -33,6 +33,22 @@ RSpec.describe RubyLLM::Browser, ".tools" do
     expect(backend.call_count(:end_session)).to eq(2)
   end
 
+  it "runs the registered tools through RubyLLM's chat tool loop without a model request" do
+    isolated = RubyLLM.context { |config| config.openai_api_key = "fixture-not-a-real-key" }
+    chat = isolated.chat(model: "gpt-4o-mini", provider: :openai, assume_model_exists: true).with_tools(*tools)
+    calls = %w[browser_inspect browser_extract].map do |name|
+      RubyLLM::ToolCall.new(id: name, name: name, arguments: { "url" => "https://docs.example.com/" })
+    end
+    chat.add_message(role: :assistant, content: nil, tool_calls: calls.to_h { |call| [ call.id, call ] })
+    chat.run_tools
+
+    responses = chat.messages.select { |message| message.role == :tool }
+    expect(responses.size).to eq(2)
+    expect(responses.map(&:content).join).to include("Example", "Open the documentation link")
+    expect(backend.call_count(:start)).to eq(2)
+    expect(backend.call_count(:end_session)).to eq(2)
+  end
+
   it "does not share mutable host schema or tool instances between calls" do
     first = tools
     other = described_class.tools(context: context, schema: schema)

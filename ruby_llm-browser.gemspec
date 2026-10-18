@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
 
   package_files = Dir.glob("{lib,docs,examples}/**/*").select { |file| File.file?(file) }
   package_files.reject! do |file|
-    file.start_with?("docs/_site/", "docs/vendor/", "docs/.bundle/", "docs/.jekyll-cache/") ||
+    file.start_with?("docs/_site/", "docs/vendor/", "docs/.bundle/", "docs/.jekyll-cache/", "docs/evidence/") ||
       %w[docs/Gemfile docs/Gemfile.lock docs/_site.ruby-llm-browser-generated].include?(file)
   end
   spec.files = package_files +

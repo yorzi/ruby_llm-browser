@@ -48,7 +48,12 @@ feedback to settle the public API.
 
 ### 0.2.0: Two Small Features
 
-1. Add a read-only tool factory, provisionally `RubyLLM::Browser.tools(context:, schema:)`.
+The current local source implements both features below. Version `0.2.0` remains an
+unreleased candidate; stable users stay on `0.1.0`. See
+[What's New]({% link _getting_started/whats-new.md %}) for usage and
+[development and testing]({% link _advanced/development-and-testing.md %}) for validation.
+
+1. Add the read-only tool factory `RubyLLM::Browser.tools(context:, schema:)`.
    Return Inspect and Extract instances suitable for `chat.with_tools(*tools)`. Keep
    the context and extraction schema explicit; never include Act. Reuse the existing
    constructors and validation instead of creating a second configuration API.
@@ -63,7 +68,8 @@ provider request, credential discovery, or Rails load. Test Doctor with fake and
 unsupported live backends. Update the relevant guides and changelog with the features.
 
 Do not add a CLI, a context builder, new database tables, or live support in this slice.
-The factory is the first implementation task; Doctor follows in a separate change.
+The factory and Doctor are implemented in separate commits. Candidate validation
+precedes any separately authorized push, tag, or publication.
 
 ### 0.3.0: Complete the Rails Result Path
 

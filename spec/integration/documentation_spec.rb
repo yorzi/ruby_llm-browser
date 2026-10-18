@@ -21,6 +21,7 @@ RSpec.describe "documentation and package contents" do
     ]
     expect(package.files).to include(*expected)
     expect(package.files.grep(/(?:\.sqlite3|\.env|\.gem$|\.lock$|spec\/)/)).to be_empty
+    expect(package.files.grep(%r{\A(?:dev/|test/|gemfiles/|docs/evidence/)})).to be_empty
   end
 
   it "resolves local Markdown links inside the distributed package" do

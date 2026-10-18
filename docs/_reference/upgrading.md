@@ -25,8 +25,11 @@ assume every report includes Stagehand or credential checks, or rely on check or
 There is no database migration or new runtime dependency. See
 [What's New]({% link _getting_started/whats-new.md %}) for details.
 
-Version `{{ site.version }}` is the first public release. It has no earlier public version
-to migrate from. Install it with `bundle add ruby_llm-browser --version "~> {{ site.version }}"`.
+{% if site.docs_unreleased %}Version `{{ site.stable_version }}` remains the latest public
+release. The current source candidate is `{{ site.version }}` and has not been published.
+{% else %}Version `{{ site.version }}` is the first public release. It has no earlier public
+version to migrate from. Install it with `bundle add ruby_llm-browser --version "~> {{ site.version }}"`.
+{% endif %}
 
 ## Earlier Development Snapshots
 
