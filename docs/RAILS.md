@@ -140,9 +140,9 @@ extension before a global sweep is safe.
 
 ## Upgrading an earlier development snapshot
 
-Nothing has been publicly released. If you already ran the earlier generator, preserve
-your data and add an explicit migration for these new fields instead of rerunning
-`create_table` or dropping the database:
+If you installed the generator from an earlier development snapshot, preserve your data
+and add an explicit migration for these new fields instead of rerunning `create_table`
+or dropping the database:
 
 ```ruby
 class HardenBrowserBookkeeping < ActiveRecord::Migration[8.1]

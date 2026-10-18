@@ -156,3 +156,22 @@ does not authorize provider calls, make Stagehand supported, or implement live A
 approved Specs Q remains identified by its historical candidate label `0.3.0-draft`.
 RubyGems publication and GitHub Pages deployment results are recorded separately from
 this pre-release audit snapshot.
+
+## Publication outcome (2026-10-18)
+
+The owner authorized publishing the offline-only `0.1.0` package after the earlier audit
+snapshot. The RubyGems trusted publisher is registered for repository `yorzi/ruby_llm-browser`,
+workflow `release.yml`, and environment `release`. The corrected tagged workflow
+[39110148539](https://github.com/yorzi/ruby_llm-browser/actions/runs/39110148539) passed
+tagged-package verification and published the gem with GitHub OIDC. RubyGems lists
+[version 0.1.0](https://rubygems.org/gems/ruby_llm-browser), published with MFA metadata;
+the [GitHub Release](https://github.com/yorzi/ruby_llm-browser/releases/tag/v0.1.0)
+contains the gem and checksum. The custom-domain [documentation site]({% link index.md %})
+is deployed and shows `0.1.0 (stable)`.
+
+The first tag run, [39109944660](https://github.com/yorzi/ruby_llm-browser/actions/runs/39109944660),
+failed before upload because the action's optional experimental attestation patch loaded
+RubyGems before Bundler and activated Ruby's default zlib. The unpublished tag was moved
+to a workflow fix that disables that optional patch; OIDC publishing remains active.
+This release does not close provider qualification: no live egress, TTL, billing, or
+cleanup calls were made. Stagehand remains unsupported, and full live Act remains deferred.

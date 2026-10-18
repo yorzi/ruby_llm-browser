@@ -102,8 +102,8 @@ exclude:
 code_language: ruby
 
 # Values that change between releases. Pages read them as {{ site.version }}
-# and {{ site.examples.NAME }}. Keep `released: false` on main; the docs builder
-# reads a release's version from its matching Git tag.
-released: false
+# and {{ site.examples.NAME }}. Keep `released: true` on main after the first
+# version tag is published. The docs builder reads stable docs from the latest tag.
+released: true
 version: "0.1.0"
 examples: {}

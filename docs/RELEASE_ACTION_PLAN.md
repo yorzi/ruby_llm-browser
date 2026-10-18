@@ -8,25 +8,37 @@ llms: false
 # Release action plan
 
 The owner selected the offline-only first release as `0.1.0`, authorized its publication,
-and requested tag-based release automation. This plan preserves the live-provider limits
-and records the release checks.
+and requested tag-based release automation. Version `0.1.0` is published. This plan records
+the outcome and preserves the live-provider limits for future work.
 
 ## Current position
 
-- Hardening baseline: `0ec34d4`.
-- Expanded remote CI is green: seven test jobs and the package/install/advisory job.
+- Hardening baseline: `0ec34d4`; release workflow fix: `8f0e8e7`.
+- Expanded remote CI passed before release. Tagged verification and publication passed in
+  [release run 39110148539](https://github.com/yorzi/ruby_llm-browser/actions/runs/39110148539).
+- RubyGems lists [ruby_llm-browser 0.1.0](https://rubygems.org/gems/ruby_llm-browser).
+  Publication used the registered trusted publisher for `yorzi/ruby_llm-browser`,
+  `.github/workflows/release.yml`, and environment `release`; MFA publication is recorded.
+- The [GitHub Release](https://github.com/yorzi/ruby_llm-browser/releases/tag/v0.1.0)
+  includes the gem and `SHA256SUMS`. The gem SHA-256 is
+  `0159bf5b4d50fc1a5d129ce8e6d8235ff9a5181704d5e8168c2facb429808ed3`.
+- The post-release Pages build passed in
+  [Docs run 39110265391](https://github.com/yorzi/ruby_llm-browser/actions/runs/39110265391).
+  The [custom-domain docs site]({% link index.md %}) shows `0.1.0 (stable)`.
+- The first publish attempt failed before upload because the action's optional
+  experimental attestation patch activated Ruby's default zlib before Bundler. The
+  unpublished tag was moved to a fix that disables that patch; OIDC publication remains.
 - Owner decision on 2026-10-18: first release is read-only; defer live Act and mark the
   built-in Stagehand backend unsupported until egress and cleanup are qualified.
 - No live provider calls are authorized or were run for this decision.
 - Independent H1 and owner H2 are complete for exact candidate Q
   `22d488987517b10dcd96d2713ed3d47e8818b36b`. H2 approves handoff, not RubyGems publication.
-- The RubyGems page for `ruby_llm-browser` returned 404 during the pre-release check on
-  2026-10-18; that did not reserve the name. The resolved 26-gem runtime license inventory
-  matches installed gemspec metadata; Stagehand is covered by its pinned source MIT text.
-- The owner later instructed publication of gem version `0.1.0`; that instruction is
-  separate from H2's handoff approval. RubyGems MFA is enabled on the signed-in publisher
-  account. Trusted publishing must match this repository's `release.yml` workflow and
-  `release` environment.
+- The pre-release exact-name check returned 404 on 2026-10-18; it did not reserve the
+  name. Version `0.1.0` is now registered on RubyGems. The resolved 26-gem runtime license
+  inventory matches installed gemspec metadata; Stagehand is covered by its pinned source
+  MIT text.
+- The owner instructed publication separately from H2's handoff approval. The gem requires
+  MFA, and RubyGems records the successful publication as MFA-protected.
 
 ## Release scope
 
@@ -42,9 +54,9 @@ exact Q `22d488987517b10dcd96d2713ed3d47e8818b36b`; the approved Specs candidate
 | --- | --- | --- |
 | Release scope / Act | H2 approved the read-only scope and KPI proposal against exact Q. Live Act remains a later-version feature. | Keep the Stagehand adapter disabled and preserve the H2 decision in release docs. |
 | Provider qualification | No live call is authorized for the first release. A later live release needs a named deployment and approval of data-processing/billing owners. | Record the unsupported egress and cleanup guarantees. Do not use a host assertion as qualification. |
-| Name and account | The owner authorized publication as `ruby_llm-browser`; the account has MFA enabled. | Recheck name availability at publication and use the pending trusted publisher configured for this repo and workflow. |
+| Name and account | The owner authorized publication as `ruby_llm-browser`; version `0.1.0` is registered and MFA-protected. | Use the existing trusted publisher for future tags; do not add a long-lived RubyGems API key to GitHub. |
 | Formal approval | H1 and H2 are complete for exact Q; C/R registration and implementation baseline receipt remain pending. | Preserve the historical approval. Do not represent H2 as RubyGems authorization; the owner's later release instruction supplies that authorization. |
-| Publication | Owner instructed publication of package version `0.1.0`. | Verify the matching tag, run the release workflow, then record the RubyGems, GitHub Release and Pages outcomes. |
+| Publication | Version `0.1.0` is published under tag `v0.1.0`; GitHub Release assets and stable Pages are live. | For each later version, align gem/docs/changelog metadata and push the matching tag. The release workflow verifies tests, advisories and package contents before OIDC publishing; Docs deploys after success. |
 
 ## Provider questions to resolve before live tests
 

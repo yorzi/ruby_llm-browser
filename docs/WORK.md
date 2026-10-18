@@ -242,6 +242,28 @@ the tag's stable documentation only after that release workflow succeeds. The fi
 is pushed only after the trusted publisher is registered for this repository and the
 `release.yml` workflow under the `release` GitHub environment.
 
+### 0.1.0 publication receipt (2026-10-18)
+
+The first tagged workflow run failed before the gem upload because the action's optional
+experimental attestation patch loaded RubyGems before Bundler and activated Ruby 3.3's
+default zlib instead of the locked patched zlib. No gem was published by that attempt.
+The release action now has attestations disabled; trusted OIDC publishing remains enabled.
+The unpublished `v0.1.0` tag was moved to the workflow-fix commit before retrying.
+
+| Check | Result |
+| --- | --- |
+| Tagged release workflow | PASS: [run 39110148539](https://github.com/yorzi/ruby_llm-browser/actions/runs/39110148539); tagged package verification and RubyGems publish jobs succeeded |
+| RubyGems | PASS: [ruby_llm-browser 0.1.0](https://rubygems.org/gems/ruby_llm-browser); published by `yorzi/ruby_llm-browser` via `.github/workflows/release.yml` and `release` environment; MFA publication is recorded |
+| Gem SHA-256 | `0159bf5b4d50fc1a5d129ce8e6d8235ff9a5181704d5e8168c2facb429808ed3` |
+| GitHub Release | PASS: [v0.1.0](https://github.com/yorzi/ruby_llm-browser/releases/tag/v0.1.0) contains the `.gem` file and `SHA256SUMS` |
+| Documentation Pages | PASS: [run 39110265391](https://github.com/yorzi/ruby_llm-browser/actions/runs/39110265391); the [custom-domain docs site]({% link index.md %}) shows `0.1.0 (stable)` |
+| Live provider egress, TTL, billing and cleanup | NOT RUN; Stagehand remains unsupported until provider qualification |
+| Full live Act protocol | NOT IMPLEMENTED; offline simulation only, deferred to a later version |
+
+The published gem metadata reports MFA publication. No long-lived RubyGems API key was
+added to GitHub; the release workflow uses the registered trusted publisher and GitHub
+OIDC. The first failed run was [39109944660](https://github.com/yorzi/ruby_llm-browser/actions/runs/39109944660).
+
 ## Commit log
 
 Small, meaningful commits land one piece at a time. See `git log` for the authoritative

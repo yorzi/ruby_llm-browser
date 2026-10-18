@@ -101,10 +101,10 @@ made for `0.1.0`.
 ## Releasing a version
 
 For a later version, update the gem version in `lib/ruby_llm/browser/version.rb` and the
-documentation version in `docs/_config.yml` to the same value. Keep `released: false` on
-`main`; the documentation builder uses release tags for the stable site and builds the
-working tree under `/next/`. Add a matching release entry to `CHANGELOG.md` and
-`docs/_reference/release-history.md`.
+documentation version in `docs/_config.yml` to the same value. Keep `released: true` on
+`main` after the first public version tag. The documentation builder uses release tags
+for the stable site and builds the working tree under `/next/`. Add a matching release
+entry to `CHANGELOG.md` and `docs/_reference/release-history.md`.
 
 Run the checks above, review the package contents and push the completed commit to
 `main`. Then create and push a matching tag, for example `v0.2.0` for gem version
