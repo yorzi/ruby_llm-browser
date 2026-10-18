@@ -30,7 +30,7 @@ RSpec.describe "Stagehand 3.21 HTTP contract" do
     expect(a_request(:any, %r{api\.stagehand\.browserbase\.com})).not_to have_been_made
   end
 
-  it "uses the real SDK serializer in a stubbed contract test and leaves cleanup pending" do
+  it "uses the real SDK serializer in a stubbed contract test without dispatching cleanup" do
     qualify_adapter_for_contract_test
     start = stub_request(:post, "#{endpoint}/start")
       .with(body: hash_including("modelName" => "openai/gpt-4o-mini", "selfHeal" => false,
@@ -49,6 +49,7 @@ RSpec.describe "Stagehand 3.21 HTTP contract" do
     expect(result.status).to eq(:cleanup_pending)
     expect(result.to_json).not_to include("private-devtools", "bb-test-credential")
     expect(start).to have_been_requested.once
+    expect(a_request(:post, "#{endpoint}/sdk-session/end")).not_to have_been_made
   end
 
   it "makes exactly one HTTP request for a 500 start, not SDK retries" do
@@ -69,7 +70,7 @@ RSpec.describe "Stagehand 3.21 HTTP contract" do
     expect(request).to have_been_requested.once
   end
 
-  it "tracks and cleans a partial unsuccessful start that returned a session id" do
+  it "tracks a partial unsuccessful start and leaves cleanup pending without a provider call" do
     qualify_adapter_for_contract_test
     stub_request(:post, "#{endpoint}/start")
       .to_return(json_response(success: false, data: { sessionId: "partial-session", cdpUrl: "wss://private" }))
@@ -79,7 +80,7 @@ RSpec.describe "Stagehand 3.21 HTTP contract" do
 
     expect(result.status).to eq(:cleanup_pending)
     expect(context.operation_store.fetch(result.operation_id).session_id).to eq("partial-session")
-    expect(cleanup).to have_been_requested.once
+    expect(cleanup).not_to have_been_made
   end
 
   it "keeps a successful HTTP response without a session id unknown" do

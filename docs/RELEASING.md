@@ -84,7 +84,7 @@ Verify all of the following:
 
 The first-release scope is offline read-only. `FakeBackend` is the only built-in backend
 supported for operations. `StagehandBackend` refuses live calls, its egress capability
-stays unverified, and its end request never counts as confirmed closure. The full live Act
+stays unverified, and cleanup requests are disabled. The full live Act
 protocol is deferred to a later version. No provider calls were run or authorized.
 
 **Publication is on hold** until the independent H1 review, owner H2 approval, naming and

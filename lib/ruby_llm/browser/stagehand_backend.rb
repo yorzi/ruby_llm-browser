@@ -149,13 +149,10 @@ module RubyLLM
         dump(response.data&.result)
       end
 
-      # Requests session termination. The SDK response only reports request success; it
-      # does not expose terminal session status. Keep the operation `cleanup_pending`
-      # until a provider status check can confirm closure.
-      def end_session(session, operation:, now:)
-        client.sessions.end_(session.id, request_options: { max_retries: 0, timeout: @timeout })
-        false
-      rescue Stagehand::Errors::Error
+      # Stagehand is unsupported for this release. Do not send even a best-effort
+      # cleanup request: the response cannot prove terminal closure, and the owner
+      # declined all live provider calls. Keep the operation `cleanup_pending`.
+      def end_session(_session, operation:, now:)
         false
       end
 

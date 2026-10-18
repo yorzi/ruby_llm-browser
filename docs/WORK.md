@@ -152,12 +152,13 @@ the package job reports no known dependency advisories plus all three clean-inst
 success markers. No RubyGems release or paid provider call was performed. Publication
 remains NO-GO for the other recorded gates.
 
-### Working-tree follow-up after the first-release scope decision (2026-10-18)
+### No-provider-dispatch cleanup follow-up (2026-10-18)
 
 The owner selected an offline read-only first release, deferred the full live Act
-protocol, and declined live provider calls. The Stagehand adapter now refuses every
-live operation and never reports its end-request acknowledgement as confirmed closure.
-This working-tree follow-up is local evidence; it is not covered by the CI run above.
+protocol, and declined live provider calls. The Stagehand adapter refuses every live
+operation. Its end_session method returns false without invoking the SDK; stubbed HTTP
+tests assert that neither normal cleanup nor partial-start cleanup sends an end request.
+This follow-up is local evidence; it is not covered by the CI run above.
 
 | Check | Result |
 | --- | --- |
@@ -166,7 +167,7 @@ This working-tree follow-up is local evidence; it is not covered by the CI run a
 | `BUNDLE_GEMFILE=gemfiles/rails_8_0.gemfile bundle exec rspec` | PASS: 305 examples, 0 failures; RubyLLM 2.0.0 and Rails/Active Job 8.0.5.1 |
 | `./docs/bin/build.sh` | PASS: Jekyll built the working tree |
 | `bundle exec rake build` | PASS: built `ruby_llm-browser-0.1.0.gem` |
-| `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, `RAILS_PACKAGE_PASS` |
+| `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, `RAILS_PACKAGE_PASS`; final artifact SHA-256 is in ignored `pkg/SHA256SUMS` |
 | Live provider egress, TTL, billing, and cleanup | NOT RUN; no live calls authorized |
 | Current working-tree remote CI | NOT RUN; the passing CI above is for `0ec34d4` |
 | RubyGems publication | NOT ATTEMPTED; H1/H2 and name/license release gates remain open |

@@ -130,9 +130,10 @@ subresources. This is insufficient evidence for the required browser-side egress
 The [Update a Session endpoint](https://docs.browserbase.com/reference/api/update-a-session)
 accepts `REQUEST_RELEASE` and may return a session in `PENDING`; the [Get a Session endpoint](https://docs.browserbase.com/reference/api/get-a-session)
 exposes `status` and `endedAt`. Stagehand 3.21's `SessionEndResponse.success` only says
-the request succeeded, and its SDK does not expose that status lookup. The adapter may
-request an end, but it returns `false` and leaves the operation `cleanup_pending` until a
-future implementation can verify terminal status.
+the request succeeded, and its SDK does not expose that status lookup. The implementation
+therefore sends no Stagehand provider request, including `end_`; cleanup remains
+`cleanup_pending` until future work can verify terminal status. The stubbed HTTP contract
+tests now assert that no cleanup request is dispatched.
 
 No egress, TTL, billing, or cleanup live calls were made. BR-02 remains open for any
 future live backend, but it no longer blocks the offline-only first-release scope. BR-03

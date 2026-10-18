@@ -190,13 +190,9 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
   end
 
   describe "#end_session" do
-    it "does not treat an accepted end request as confirmed closure" do
-      allow(sessions).to receive(:end_).and_return(response(nil))
+    it "does not send a provider request or claim cleanup was confirmed" do
       expect(backend.end_session(session, operation: operation, now: now)).to be(false)
-      expect(sessions).to have_received(:end_).once
-
-      allow(sessions).to receive(:end_).and_raise(status_error(500))
-      expect(backend.end_session(session, operation: operation, now: now)).to be(false)
+      expect(sessions).not_to have_received(:end_)
     end
   end
 

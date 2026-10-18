@@ -137,9 +137,8 @@ Act calls also fail closed. No constructor option or injected client enables liv
 The adapter remains in the source for future qualification. Its client pins credentials
 and base URL, disables retries, self-healing, CAPTCHA solving, session recording and
 session logging, and requests a provider timeout. These controls do not prove egress,
-TTL, billing, final-URL reporting, or cleanup. `end_session` can request termination,
-but returns `false` because the SDK response confirms only that the request succeeded,
-not that the session reached a terminal state. The operation remains `cleanup_pending`.
+TTL, billing, final-URL reporting, or cleanup. `end_session` sends no request in this
+release and returns `false`; the operation remains `cleanup_pending`.
 
 The constructor accepts `server: :remote`, `base_url:`, `timeout: 60.0`,
 `custom_headers_approved: false`, `env: ENV`, and an injected `client:` for internal

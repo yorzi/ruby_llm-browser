@@ -85,9 +85,9 @@ BR-04 block publication. They are reproduced in intent so they cannot be quietly
 
 The owner selected a read-only first release, deferred the full live Act protocol to a
 later version, and declined live provider calls. This narrows the first release to the
-offline `FakeBackend` and does not close BR-02 for later live support. The Stagehand
-adapter always reports unverified egress, refuses live start/navigation/observe/extract/
-Act, and treats an accepted end request as unconfirmed cleanup. Formal H1/H2 and the
+offline `FakeBackend` and does not close BR-02 for later live support. Stagehand always
+reports unverified egress, refuses live operations, and sends no provider call including
+cleanup. Unresolved sessions remain `cleanup_pending`. Formal H1/H2 and the
 BR-03 naming/license review remain open.
 
 ## Evidence rule
