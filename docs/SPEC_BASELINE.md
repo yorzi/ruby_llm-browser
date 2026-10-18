@@ -16,11 +16,13 @@ separate specifications repository; this file records exactly which baseline was
 | Field | Value |
 | --- | --- |
 | Intent source repository | `yorzi/oddlyniche`, folder `ruby-llm-browser` |
-| Intent source commit | `dd61f0d38b3b040b27382deeda24a9d80162f524` |
-| Source commit date | 2026-10-17 |
-| Spec baseline version | `0.2.1-draft` |
-| Spec lifecycle | `DRAFT` (`CHANGES_REQUIRED` for H1/H2) |
-| Implementation authorized | 2026-10-17 (independent Gem engineering; **not** H1/H2) |
+| Reviewed candidate Q | `22d488987517b10dcd96d2713ed3d47e8818b36b` |
+| H2 approval/content commit C | `678f9faed6dfdd8e55a7c54566f94cfa1ad1bc0a` |
+| Registration commit R | Pending; not registered |
+| Source commit date | 2026-10-18 |
+| Spec baseline version | `0.3.0-draft` |
+| Spec lifecycle | `HANDOFF_READY`; independent H1 complete and owner H2 approved for exact Q |
+| Implementation authorized | 2026-10-17; H2 handoff approved 2026-10-18 (does not authorize RubyGems publication) |
 | Gem | `ruby_llm-browser` |
 | Namespace | `RubyLLM::Browser` |
 | Require path | `ruby_llm/browser` |
@@ -62,8 +64,9 @@ separate specifications repository; this file records exactly which baseline was
 - No cost ledger or hard currency cap is implemented. Retained-result limits do not
   cap provider response allocations or browser bandwidth.
 
-These corrections harden engineering behavior without claiming a specification scope
-change, H1/H2 approval, live use authorization, or release clearance. See
+These corrections harden engineering behavior. The owner separately approved exact
+Specs candidate Q `22d488987517b10dcd96d2713ed3d47e8818b36b` at H2 on 2026-10-18;
+that approval does not authorize live use or RubyGems publication. See
 [the audit]({% link RELEASE_AUDIT.md %}) for unresolved protocol/product decisions.
 
 ## Outstanding blockers (carried from the spec baseline)
@@ -75,11 +78,15 @@ BR-04 block publication. They are reproduced in intent so they cannot be quietly
   isolation across navigation, redirects, iframes, popups, subresources, WebSockets and
   metadata routes before live mode is enabled. The first release keeps Stagehand
   unsupported and makes no live calls. Ruby-side URL/DNS checks cannot prove egress.
-- **BR-03 / release blocker:** exact RubyGems name ownership, trademark/affiliation
-  clearance and the upstream/transitive license chain must be confirmed. The name was
-  unregistered at check time (not reserved or owned).
-- **BR-04:** formal independent H1 review, generated human-review artifact and owner H2
-  are separate governance steps; nothing here claims them.
+- **BR-03 / release blocker:** confirm the exact RubyGems name at publication, publisher
+  account and MFA, and owner/distributor clearance for trademark/affiliation wording.
+  The 2026-10-18 API check returned 404, which means unregistered at that check only;
+  it does not reserve or establish ownership. The 26-gem runtime license metadata
+  inventory now matches the resolved lockfile; the Stagehand MIT text is pinned below.
+  This technical inventory is not legal clearance.
+- **BR-04:** independent H1 and owner H2 are complete for the exact Q above. Baseline
+  registration R and the exact-artifact publication approval remain pending. H2 does
+  not authorize RubyGems publication.
 
 ## Owner scope decision (2026-10-18)
 
@@ -87,8 +94,9 @@ The owner selected a read-only first release, deferred the full live Act protoco
 later version, and declined live provider calls. This narrows the first release to the
 offline `FakeBackend` and does not close BR-02 for later live support. Stagehand always
 reports unverified egress, refuses live operations, and sends no provider call including
-cleanup. Unresolved sessions remain `cleanup_pending`. Formal H1/H2 and the
-BR-03 naming/license review remain open.
+cleanup. Unresolved sessions remain `cleanup_pending`. H1/H2 are approved for exact Q;
+registration R, BR-03 owner/distributor clearance, and exact-artifact publication approval
+remain open.
 
 ## Evidence rule
 

@@ -46,7 +46,7 @@ proves remote browser egress and no live Stagehand call has been run.
 | FR-05 approved Act | `spec/ruby_llm/browser/act_spec.rb`, `spec/ruby_llm/browser/engine_spec.rb` | same, `spec/security/release_audit_spec.rb` | PASS for offline simulation only; live Act deferred, same-session protocol NOT IMPLEMENTED | 2026-10-18 |
 | FR-06 Rails jobs | `spec/rails/operation_job_spec.rb`, `spec/rails/reaper_spec.rb`, `spec/rails/active_record_operation_store_spec.rb`, `spec/rails/active_record_approval_store_spec.rb` | same (wrong actor, fenced-out worker, cancel-mid-session, cleanup_pending visible) | PASS (fake backend + in-memory SQLite) | 2026-10-17 |
 | FR-07 failure/budget/audit | `spec/ruby_llm/browser/engine_spec.rb` (budget, redaction), `spec/ruby_llm/browser/stagehand_backend_spec.rb` | `spec/integration/stagehand_http_spec.rb` (stubbed HTTP; default live calls refused; cleanup ACK not closure), `spec/ruby_llm/browser/doctor_spec.rb` | Offline contract tests only; live Stagehand calls NOT RUN and unsupported | 2026-10-18 |
-| FR-08 full delivery | Build/install evidence below, `spec/integration/documentation_spec.rb` | Core/Rails require, generator/migration and compatibility suites | Package checks PASS; publication HOLD for H1/H2 and BR-03, see audit | 2026-10-18 |
+| FR-08 full delivery | Build/install evidence below, `spec/integration/documentation_spec.rb` | Core/Rails require, generator/migration and compatibility suites | Package checks PASS; H1/H2 approved for exact Q; publication HOLD for name/account, MFA, owner clearance and exact artifact, see audit | 2026-10-18 |
 
 Run command for every row: `bundle exec rspec` (and `bundle exec rubocop`). Environment is
 the pinned local table above.
@@ -111,7 +111,7 @@ Markdown links, shipped files and executable offline README examples.
 | Live provider egress / TTL / billing / final URL | No live session authorized or run | NOT RUN |
 | PostgreSQL concurrency | No PostgreSQL fixture run | NOT RUN |
 | Expanded remote CI | Linux Ruby 3.2/3.3/3.4, RubyLLM 2.0.0/2.1.1, Rails 8.1 plus Rails 8.0 row | PASS for `0ec34d4`: seven test jobs plus build/install/advisory job |
-| Public release | Independent H1/H2 and BR-03 naming/license review | HOLD; offline first-release scope selected |
+| Public release | H1/H2 for exact Q, BR-03 naming/license, exact artifact | HOLD; H1/H2 passed, distribution clearance and artifact approval remain open |
 
 ### Stronger package-install evidence
 
@@ -170,7 +170,7 @@ This follow-up is local evidence; it is not covered by the CI run above.
 | `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, `RAILS_PACKAGE_PASS`; final artifact SHA-256 is in ignored `pkg/SHA256SUMS` |
 | Live provider egress, TTL, billing, and cleanup | NOT RUN; no live calls authorized |
 | Current working-tree remote CI | NOT RUN; the passing CI above is for `0ec34d4` |
-| RubyGems publication | NOT ATTEMPTED; H1/H2 and name/license release gates remain open |
+| RubyGems publication | NOT ATTEMPTED; H1/H2 passed for exact Q, but name/account/MFA, owner clearance and exact-artifact approval remain open |
 
 The clean package verifier needed network access to resolve gems from RubyGems. It ran
 from an isolated temporary GEM_HOME outside the checkout. Its network use was limited to
@@ -197,11 +197,33 @@ revocation, binding, concurrency, denial results, and this boundary.
 | `bundle exec rake build` | PASS: built `ruby_llm-browser-0.1.0.gem` |
 | `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, and `RAILS_PACKAGE_PASS`; isolated clean install |
 | Live provider egress, TTL, billing, and terminal cleanup | NOT RUN; no live calls authorized |
-| RubyGems publication | HOLD: independent H1, owner H2, exact name/account, and license clearance remain open |
+| RubyGems publication | HOLD: H1/H2 passed for exact Q; name/account/MFA, owner clearance and exact artifact approval remain open |
 
 These local checks do not qualify browser-side egress, provider TTL, billing, or remote
 cleanup. They validate a local unpublished candidate, not a release. Rebuild the exact
 artifact after any release metadata changes and only after the H1/H2 gates.
+
+### H2 handoff and distribution inventory (2026-10-18)
+
+The owner approved the offline read-only v1 scope and KPI proposal against exact Specs
+candidate Q `22d488987517b10dcd96d2713ed3d47e8818b36b`. The approval is recorded in
+OddlyNiche content commit C `678f9faed6dfdd8e55a7c54566f94cfa1ad1bc0a`. H1/H2 passed;
+registration R and this repository's final baseline receipt remain pending. H2 does not
+authorize RubyGems publication.
+
+| Check | Result |
+| --- | --- |
+| Resolved runtime dependency license inventory | PASS: 26 dependencies' exact lockfile versions and installed gemspec license metadata match NOTICE; Stagehand's missing metadata is covered by its pinned upstream MIT text |
+| RubyGems exact-name query | HTTP 404 on 2026-10-18; unregistered at check time, not reserved |
+| Runtime dependency license inventory | PASS: 26 exact lockfile versions and installed gemspec licenses match NOTICE; Stagehand source MIT text is pinned |
+| Project docs checker | PASS: 12 guide pages, 0 errors, 0 warnings |
+| Jekyll build | PASS: `./docs/bin/build.sh` built the working tree |
+| Local package review | PASS: version 0.1.0, 83 files, 7 runtime dependencies, MFA metadata present, no blocked paths |
+| RubyGems MFA requirement | Gem metadata requires publisher MFA; enable MFA before the first push |
+| RubyGems publication / live provider call | NOT ATTEMPTED; publication awaits exact-artifact approval and distribution clearance; no provider calls were made |
+
+The license inventory is a point-in-time metadata check, not legal clearance. Recheck
+name availability and the final built artifact immediately before any release.
 
 ## Commit log
 

@@ -87,21 +87,24 @@ supported for operations. `StagehandBackend` refuses live calls, its egress capa
 stays unverified, and cleanup requests are disabled. The full live Act
 protocol is deferred to a later version. No provider calls were run or authorized.
 
-**Publication is on hold** until the independent H1 review, owner H2 approval, naming and
-license decisions, and exact-artifact review are complete. See [the audit findings]({% link RELEASE_AUDIT.md %}).
+**Publication remains on hold.** Independent H1 and owner H2 are complete for the exact
+Specs candidate Q. RubyGems name/account and MFA, owner/distributor naming and license
+clearance, baseline registration, and exact-artifact review remain open. See [the audit findings]({% link RELEASE_AUDIT.md %}).
 
 1. Keep Stagehand and live Act unsupported in this release. Before enabling either in a
    later version, qualify egress across every request path, final URL reporting, TTL,
    cleanup status, unknown-start recovery, and provider billing controls. This requires a
    separately authorized live qualification; no such call was made for this release.
-2. Complete an independent H1 review, generate and freshness-check the human HTML, and
-   obtain the owner's H2 approval against the fixed review question and candidate commit.
-3. Confirm RubyGems account/name ownership and naming/affiliation clearance. A 404 for
-   an unregistered name does not reserve it or establish permission to use it.
-4. Complete the distribution license review. The resolved metadata inventory and pinned
-   Stagehand MIT text in NOTICE are evidence, not legal/name clearance.
-5. Run expanded remote CI, review the final diff and exact artifact, and publish only
-   after the outstanding gates pass.
+2. H1 and the human HTML freshness gate passed; the owner approved offline read-only v1
+   and its KPI proposal against Q `22d488987517b10dcd96d2713ed3d47e8818b36b`.
+   Registration R and the implementation baseline receipt remain pending.
+3. Recheck RubyGems name availability at push time and verify the publisher account has
+   MFA enabled. The 2026-10-18 API 404 did not reserve the name.
+4. The 26-gem runtime license metadata inventory matches the resolved lockfile; the
+   Stagehand source MIT license is pinned in NOTICE. Owner/distributor clearance for
+   the name, trademark and affiliation wording remains open.
+5. Run remote CI for the final commit, review the exact artifact, and obtain explicit
+   publication approval for that artifact before pushing it to RubyGems.
 
 Keep the changelog under **Unreleased** until publication. Building version `0.1.0` is
 not proof a `0.1.0` release exists. This checklist does not create a tag, push commits,

@@ -1,8 +1,14 @@
 # Third-party notices
 
-`ruby_llm-browser` is MIT licensed (see `LICENSE.txt`). It builds on the following
-upstream projects. No upstream code is vendored into this Gem; the notices below
-exist so downstream installs can reproduce the full license chain.
+`ruby_llm-browser` is MIT licensed (see `LICENSE.txt`). It declares separate runtime
+dependencies; no upstream source code is vendored in this Gem. The inventory below covers
+the 26 runtime dependency gems resolved in the local lockfile on 2026-10-18 and matches
+their exact installed gemspec license metadata. Stagehand has no license metadata in its
+published gem, so its MIT license is tied to the pinned upstream source tag below.
+
+This is a point-in-time technical inventory, not legal advice or trademark, affiliation,
+account-ownership, or publication clearance. Version ranges can resolve different
+versions later; recheck the exact artifact before distribution.
 
 ## RubyLLM (`ruby_llm`)
 
@@ -21,46 +27,42 @@ exist so downstream installs can reproduce the full license chain.
   `LICENSE` file, so this notice cites the repository license at the pinned tag. Pin
   the exact version and checksum in your `Gemfile.lock`.
 
-## Transitive dependencies
-
-`ruby_llm`, `stagehand`, and their transitive dependencies may carry other licenses
-(`faraday`, `zeitwerk`, `schematist`, `connection_pool`, `cgi`, and so on). Audit them
-for your own distribution; this file does not replace that audit.
-
 ## Point-in-time runtime inventory (2026-10-18)
 
-Resolved locally on Ruby 3.3.5 with RubyLLM 2.1.1. Version ranges can resolve a different
-set on a future install. No dependency source is vendored; dependencies are distributed
-as separate gems. This metadata inventory is not naming or legal clearance.
+Resolved locally on Ruby 3.3.5 with RubyLLM 2.1.1. Every dependency row was matched to
+the local lockfile version and installed gemspec license metadata. RubyGems version links
+identify the exact distributed releases; Stagehand's pinned-source exception is noted
+above. Rails/Active Record/Active Job and sqlite3 are host/test dependencies and are not
+part of this Gem's runtime dependency graph.
 
-| Dependency | Version | Declared license(s) |
-| --- | --- | --- |
-| ruby_llm | 2.1.1 | MIT |
-| stagehand | 3.21.0 | No gem metadata; pinned source MIT text below |
-| json_schemer | 2.5.0 | MIT |
-| hana | 1.3.7 | MIT |
-| simpleidn | 0.3.0 | MIT |
-| regexp_parser | 2.13.1 | MIT |
-| schematist | 1.1.0 | MIT |
-| zeitwerk | 2.8.3 | MIT |
-| connection_pool | 3.0.2 | MIT |
-| faraday | 2.15.0 | MIT |
-| faraday-net_http | 3.5.0 | MIT |
-| faraday-multipart | 1.2.0 | MIT |
-| faraday-retry | 2.4.0 | MIT |
-| multipart-post | 2.4.1 | MIT |
-| marcel | 2.1.0 | MIT / Apache-2.0 |
-| base64 | 0.3.0 | Ruby / BSD-2-Clause |
-| bigdecimal | 4.1.3 | Ruby / BSD-2-Clause |
-| cgi | 0.5.2 | Ruby / BSD-2-Clause |
-| json | 3.1.0 | Ruby |
-| logger | 1.7.0 | Ruby / BSD-2-Clause |
-| net-http | 0.10.0 | Ruby / BSD-2-Clause |
-| net-protocol | 0.4.0 | Ruby / BSD-2-Clause |
-| timeout | 0.6.1 | Ruby / BSD-2-Clause |
-| uri | 1.1.2 | Ruby / BSD-2-Clause |
-| resolv | 0.8.1 | Ruby / BSD-2-Clause |
-| zlib | 3.2.4 | Ruby / BSD-2-Clause |
+| Dependency | Version | Declared license(s) | RubyGems version record |
+| --- | --- | --- | --- |
+| [`ruby_llm`](https://rubygems.org/gems/ruby_llm/versions/2.1.1) | 2.1.1 | MIT | [RubyGems version](https://rubygems.org/gems/ruby_llm/versions/2.1.1) |
+| [`stagehand`](https://rubygems.org/gems/stagehand/versions/3.21.0) | 3.21.0 | No gem metadata; pinned source MIT text below | [RubyGems version](https://rubygems.org/gems/stagehand/versions/3.21.0) |
+| [`json_schemer`](https://rubygems.org/gems/json_schemer/versions/2.5.0) | 2.5.0 | MIT | [RubyGems version](https://rubygems.org/gems/json_schemer/versions/2.5.0) |
+| [`hana`](https://rubygems.org/gems/hana/versions/1.3.7) | 1.3.7 | MIT | [RubyGems version](https://rubygems.org/gems/hana/versions/1.3.7) |
+| [`simpleidn`](https://rubygems.org/gems/simpleidn/versions/0.3.0) | 0.3.0 | MIT | [RubyGems version](https://rubygems.org/gems/simpleidn/versions/0.3.0) |
+| [`regexp_parser`](https://rubygems.org/gems/regexp_parser/versions/2.13.1) | 2.13.1 | MIT | [RubyGems version](https://rubygems.org/gems/regexp_parser/versions/2.13.1) |
+| [`schematist`](https://rubygems.org/gems/schematist/versions/1.1.0) | 1.1.0 | MIT | [RubyGems version](https://rubygems.org/gems/schematist/versions/1.1.0) |
+| [`zeitwerk`](https://rubygems.org/gems/zeitwerk/versions/2.8.3) | 2.8.3 | MIT | [RubyGems version](https://rubygems.org/gems/zeitwerk/versions/2.8.3) |
+| [`connection_pool`](https://rubygems.org/gems/connection_pool/versions/3.0.2) | 3.0.2 | MIT | [RubyGems version](https://rubygems.org/gems/connection_pool/versions/3.0.2) |
+| [`faraday`](https://rubygems.org/gems/faraday/versions/2.15.0) | 2.15.0 | MIT | [RubyGems version](https://rubygems.org/gems/faraday/versions/2.15.0) |
+| [`faraday-net_http`](https://rubygems.org/gems/faraday-net_http/versions/3.5.0) | 3.5.0 | MIT | [RubyGems version](https://rubygems.org/gems/faraday-net_http/versions/3.5.0) |
+| [`faraday-multipart`](https://rubygems.org/gems/faraday-multipart/versions/1.2.0) | 1.2.0 | MIT | [RubyGems version](https://rubygems.org/gems/faraday-multipart/versions/1.2.0) |
+| [`faraday-retry`](https://rubygems.org/gems/faraday-retry/versions/2.4.0) | 2.4.0 | MIT | [RubyGems version](https://rubygems.org/gems/faraday-retry/versions/2.4.0) |
+| [`multipart-post`](https://rubygems.org/gems/multipart-post/versions/2.4.1) | 2.4.1 | MIT | [RubyGems version](https://rubygems.org/gems/multipart-post/versions/2.4.1) |
+| [`marcel`](https://rubygems.org/gems/marcel/versions/2.1.0) | 2.1.0 | MIT / Apache-2.0 | [RubyGems version](https://rubygems.org/gems/marcel/versions/2.1.0) |
+| [`base64`](https://rubygems.org/gems/base64/versions/0.3.0) | 0.3.0 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/base64/versions/0.3.0) |
+| [`bigdecimal`](https://rubygems.org/gems/bigdecimal/versions/4.1.3) | 4.1.3 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/bigdecimal/versions/4.1.3) |
+| [`cgi`](https://rubygems.org/gems/cgi/versions/0.5.2) | 0.5.2 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/cgi/versions/0.5.2) |
+| [`json`](https://rubygems.org/gems/json/versions/3.1.0) | 3.1.0 | Ruby | [RubyGems version](https://rubygems.org/gems/json/versions/3.1.0) |
+| [`logger`](https://rubygems.org/gems/logger/versions/1.7.0) | 1.7.0 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/logger/versions/1.7.0) |
+| [`net-http`](https://rubygems.org/gems/net-http/versions/0.10.0) | 0.10.0 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/net-http/versions/0.10.0) |
+| [`net-protocol`](https://rubygems.org/gems/net-protocol/versions/0.4.0) | 0.4.0 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/net-protocol/versions/0.4.0) |
+| [`timeout`](https://rubygems.org/gems/timeout/versions/0.6.1) | 0.6.1 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/timeout/versions/0.6.1) |
+| [`uri`](https://rubygems.org/gems/uri/versions/1.1.2) | 1.1.2 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/uri/versions/1.1.2) |
+| [`resolv`](https://rubygems.org/gems/resolv/versions/0.8.1) | 0.8.1 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/resolv/versions/0.8.1) |
+| [`zlib`](https://rubygems.org/gems/zlib/versions/3.2.4) | 3.2.4 | Ruby / BSD-2-Clause | [RubyGems version](https://rubygems.org/gems/zlib/versions/3.2.4) |
 
 Rails/Active Record/Active Job are optional host dependencies (MIT); sqlite3 is a test/
 host adapter (BSD-3-Clause). Development-only dependencies are not gem runtime requirements.

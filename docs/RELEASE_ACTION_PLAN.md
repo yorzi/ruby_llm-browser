@@ -17,24 +17,31 @@ gates before attempting publication.
 - Owner decision on 2026-10-18: first release is read-only; defer live Act and mark the
   built-in Stagehand backend unsupported until egress and cleanup are qualified.
 - No live provider calls are authorized or were run for this decision.
-- The owner requested a RubyGems publication attempt. Publication is still on hold while
-  H1/H2, naming, license, and exact-artifact checks remain open.
+- Independent H1 and owner H2 are complete for exact candidate Q
+  `22d488987517b10dcd96d2713ed3d47e8818b36b`. H2 approves handoff, not RubyGems publication.
+- The 2026-10-18 RubyGems API check returned 404 for `ruby_llm-browser`; the name was
+  unregistered at that time and is not reserved. The resolved 26-gem runtime license
+  inventory matches installed gemspec metadata; Stagehand is covered by its pinned source MIT text.
+- Publication remains on hold for baseline registration, name/account and MFA checks,
+  owner/distributor naming and affiliation clearance, final artifact review, and explicit
+  approval of that exact artifact. This gem requires publisher MFA; RubyGems rejects the
+  first push if the publisher account has not enabled it.
 
 ## Your next decision
 
 The first version supports offline `FakeBackend` operations. `StagehandBackend` remains in
 the source but cannot start or operate on a live session. The full same-session Act
-protocol is deferred to a later version. This scope decision is not H1/H2 approval or
-RubyGems publication clearance.
+protocol is deferred to a later version. H1/H2 approved this scope for handoff; neither
+the scope decision nor H2 approves RubyGems publication.
 
 ## Remaining work and ownership
 
 | Gate | What you decide or provide | What the assistant can do |
 | --- | --- | --- |
-| Release scope / Act | Review the read-only first-release scope. Live Act remains a later-version feature. | Keep the Stagehand adapter disabled; update the release and formal review packs. |
+| Release scope / Act | H2 approved the read-only scope and KPI proposal against exact Q. Live Act remains a later-version feature. | Keep the Stagehand adapter disabled and preserve the H2 decision in release docs. |
 | Provider qualification | No live call is authorized for the first release. A later live release needs a named deployment and approval of data-processing/billing owners. | Record the unsupported egress and cleanup guarantees. Do not use a host assertion as qualification. |
 | Name and account | Confirm the publisher identity, maintain a RubyGems account with MFA, and accept the naming/affiliation/license review. | Recheck availability, assemble license evidence, prepare release metadata and a trusted-publishing workflow. An unregistered name is not reserved; do not publish a placeholder to claim it. |
-| Formal approval | Review the specification artifacts and make the required owner decisions. | Prepare the review materials and traceability; never mark human approval on your behalf. |
+| Formal approval | H1 and H2 are complete for exact Q; C/R registration and implementation baseline receipt remain pending. | Finish the source baseline registration and update the implementation receipt without changing approved product intent. |
 | Publication | Explicitly approve the exact release artifact and public disclosure. | Build, verify, tag and publish only within the final authorization; provide checksums and a post-release verification report. |
 
 ## Provider questions to resolve before live tests

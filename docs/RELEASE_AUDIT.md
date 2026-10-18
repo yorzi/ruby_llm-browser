@@ -73,12 +73,19 @@ protocol in a later version. No unaudited opt-in flag should bypass this Engine 
 
 ### P2: Distribution ownership and approval (BR-03 / BR-04; publication blockers)
 
-RubyGems returned 404 for `ruby_llm-browser` on 2026-10-18: the name is unregistered,
-not reserved or owned. RubyGems account ownership and naming/affiliation clearance are
-unconfirmed. Runtime license metadata was inspected and Stagehand's pinned repository
-MIT text was fetched, but final distribution review belongs to the owner. The existing
-specification still records separate H1/H2 review gates; engineering work does not
-grant those approvals.
+The RubyGems API returned 404 for `ruby_llm-browser` on 2026-10-18. It was
+unregistered at that check, not reserved or owned. The signed-in publisher account has
+MFA disabled; this gem requires MFA, so a push will be rejected until the owner enables
+it. Exact name availability, trademark/affiliation wording and owner/distributor
+clearance remain open. The 26-gem runtime license metadata inventory now matches the
+resolved lockfile; the Stagehand source MIT text is pinned in NOTICE. This technical
+inventory is not legal clearance.
+
+Independent H1 is complete and owner H2 approved the offline read-only scope and KPI
+proposal against exact Q `22d488987517b10dcd96d2713ed3d47e8818b36b` on 2026-10-18.
+The approval record is in the OddlyNiche Specs handoff. Baseline registration R and
+implementation receipt remain pending. H2 does not approve RubyGems publication or the
+exact release artifact.
 
 ## Limits and follow-up checks
 
