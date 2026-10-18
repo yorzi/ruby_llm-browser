@@ -28,16 +28,16 @@ private page payloads in a report; use synthetic fixtures.
   issued with `max_retries: 0`. Unknown outcomes stay `unknown` /
   `cleanup_pending` and are never silently retried into a second session or a
   duplicated action.
-- **Secrets never leave.** API keys, cookies, `cdp_url` and raw page dumps are
-  redacted from tool results, logs and errors. All SDK arguments are passed
+- **Reduce secret exposure.** Credential-like fields, known secret literals and
+  `cdp_url` endpoints are redacted; this is not a general PII/page-secret detector.
+  Avoid authenticated/private browsing and raw payload logging. SDK client arguments are passed
   explicitly; the Gem never reads SDK environment defaults for credentials or base
   URLs, and refuses to start when `STAGEHAND_CUSTOM_HEADERS` is set unless the host
   approved it.
-- **Act is opt-in and single-use.** `RubyLLM::Browser::Act` is never registered by
-  default. Each dispatch requires a host-issued approval bound to actor, run, URL,
-  page revision, exact action digest and expiry, consumed atomically once immediately
-  before the call. Purchases, posting, account changes and access-control bypass are
-  out of scope, always.
+- **Live Act is disabled.** `RubyLLM::Browser::Act` is never registered by default,
+  and the Engine refuses non-fake action backends. Offline single-use approval tests
+  do not establish the missing same-session/target authorization protocol. Purchases,
+  posting, account changes and access-control bypass remain unsupported.
 
 ## Scope of guarantees
 

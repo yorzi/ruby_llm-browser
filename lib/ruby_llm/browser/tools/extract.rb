@@ -40,10 +40,12 @@ module RubyLLM
       end
 
       def execute(url:, instruction: nil, max_bytes: nil)
-        report("Extracting from #{url}")
+        report("Extracting from an approved page")
         engine.extract(url: url, schema: schema, instruction: instruction, max_bytes: max_bytes).to_h
       rescue Error => e
         failure(e)
+      rescue StandardError
+        unexpected_failure
       end
 
       private
@@ -51,7 +53,7 @@ module RubyLLM
       def pinned_schema!(value)
         raise InvalidInput, "Extract requires a host-pinned schema" if value.nil?
 
-        value
+        Immutable.copy(value)
       end
     end
   end

@@ -48,7 +48,12 @@ module RubyLLM
       # Converts a typed engine error into a model-safe tool result. The stable error
       # code is preserved; the message is Gem-authored and never contains secrets.
       def failure(error)
-        Result.failure(:error, error_code: error.code, message: error.message).to_h
+        message = Redactor.scrub_string(error.message, secrets: context.secrets)
+        Result.failure(:error, error_code: error.code, message: message).to_h
+      end
+
+      def unexpected_failure
+        failure(ProviderError.new("browser operation could not be completed"))
       end
 
       def engine = @engine

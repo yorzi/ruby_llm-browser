@@ -12,7 +12,8 @@ module RubyLLM
     class Configuration
       DEFAULT_MAX_RESULT_BYTES = 65_536 # 64 KiB of sanitized result data
 
-      # A default backend for tools that share one. Optional: {Context} carries its own.
+      # Reserved host configuration slot. Context still requires an explicit backend;
+      # setting this never enables a fallback or changes an existing tool's backend.
       attr_accessor :backend
 
       attr_reader :clock, :default_budget, :max_result_bytes

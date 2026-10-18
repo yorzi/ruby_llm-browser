@@ -25,6 +25,9 @@ module RubyLLM
           @clock = clock || RubyLLM::Browser::Rails.clock
           @logger = logger || RubyLLM::Browser.logger
           @ttl_seconds = ttl_seconds
+          if ttl_seconds && !(ttl_seconds.is_a?(Numeric) && ttl_seconds.finite? && ttl_seconds.positive?)
+            raise InvalidInput, "reaper TTL must be a positive finite number"
+          end
         end
 
         # Sweeps every open operation once.
@@ -46,18 +49,28 @@ module RubyLLM
 
         def reap(operation, now)
           return :kept unless reapable?(operation, now)
+
+          operation = @store.lease(operation.id, actor_id: operation.actor_id,
+                                  run_id: operation.run_id, now: now)
           return close(operation, now) if never_started?(operation)
 
           case @backend.reconcile(operation, now: now)
           when :closed then close(operation, now)
-          when :cleanup_pending then mark_cleanup_pending(operation, now)
-          when :active then close_remote?(operation, now) ? close(operation, now) : mark_cleanup_pending(operation, now)
-          else :unknown
+          else
+            if operation.session_id
+              close_remote?(operation, now) ? close(operation, now) : mark_cleanup_pending(operation, now)
+            else
+              write(operation, :unknown, now, error_code: SessionUnknown.code)
+              :unknown
+            end
           end
+        rescue StandardError
+          @logger&.warn { "browser reaper could not reconcile an operation" }
+          :failed
         end
 
         def reapable?(operation, now)
-          operation.expired?(now) || idle?(operation, now)
+          operation.cancel_requested? || operation.cleanup_pending? || operation.expired?(now) || idle?(operation, now)
         end
 
         def idle?(operation, now)
@@ -77,12 +90,16 @@ module RubyLLM
 
           session = Session.new(id: operation.session_id)
           @backend.end_session(session, operation: operation, now: now)
-        rescue Error
+        rescue StandardError
           false
         end
 
         def close(operation, now)
-          write(operation, :closed, now)
+          if operation.session_id
+            @store.confirm_closed(operation, session_id: operation.session_id, now: now)
+          else
+            write(operation, :closed, now)
+          end
           :closed
         end
 
@@ -92,11 +109,7 @@ module RubyLLM
         end
 
         def write(operation, target, now, error_code: :keep)
-          fenced = operation.with_fence(operation.fence + 1, now: now)
-          @store.update(fenced.advance(target, now: now, error_code: error_code))
-        rescue Error => e
-          @logger&.warn { "browser reaper could not update #{operation.id}: #{e.message}" }
-          nil
+          @store.update(operation.advance(target, now: now, error_code: error_code))
         end
       end
     end

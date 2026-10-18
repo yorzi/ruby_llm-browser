@@ -11,6 +11,7 @@ module RubyLLM
       #   bin/rails generate ruby_llm:browser:install
       class InstallGenerator < ::Rails::Generators::Base
         include ::ActiveRecord::Generators::Migration
+        namespace "ruby_llm:browser:install"
 
         source_root File.expand_path("templates", __dir__)
 

@@ -13,6 +13,7 @@ require "ruby_llm"
 
 require_relative "browser/version"
 require_relative "browser/errors"
+require_relative "browser/immutable"
 require_relative "browser/redactor"
 require_relative "browser/budget"
 require_relative "browser/result"

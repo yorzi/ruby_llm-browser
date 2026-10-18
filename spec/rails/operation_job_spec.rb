@@ -35,6 +35,16 @@ RSpec.describe RubyLLM::Browser::Rails::OperationJob do
   end
 
   describe ".enqueue" do
+    it "rejects a different payload using the same actor/run idempotency key" do
+      described_class.enqueue(actor_id: "actor-1", run_id: "run-1", kind: :inspect,
+                             url: url, budget: budget, idempotency_key: "job-1")
+
+      expect do
+        described_class.enqueue(actor_id: "actor-1", run_id: "run-1", kind: :inspect,
+                               url: "https://docs.example.com/other", budget: budget, idempotency_key: "job-1")
+      end.to raise_error(RubyLLM::Browser::InvalidInput, /different request/)
+    end
+
     it "reserves one durable operation and schedules one job" do
       stored = described_class.enqueue(
         actor_id: "actor-1", run_id: "run-1", kind: :inspect, url: url,

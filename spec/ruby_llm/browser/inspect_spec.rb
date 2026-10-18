@@ -61,8 +61,10 @@ RSpec.describe RubyLLM::Browser::Inspect do
       .to raise_error(RubyLLM::Browser::InvalidInput, /context/)
   end
 
-  it "loads and runs in plain Ruby with no Rails constant" do
-    expect(defined?(Rails)).to be_nil
+  it "runs with an in-memory context without any Rails adapter" do
+    # The subprocess require spec verifies the no-Rails load boundary. This process
+    # also runs the optional adapter/generator tests, so Rails may already be loaded.
+    expect(context.operation_store).to be_a(RubyLLM::Browser::InMemoryOperationStore)
     expect(tool.call(url: url)[:status]).to eq("ok")
   end
 end

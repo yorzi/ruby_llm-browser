@@ -55,13 +55,16 @@ module RubyLLM
 
       def stagehand_check
         require "stagehand/version"
+        unless Gem::Requirement.new("~> 3.21.0").satisfied_by?(Gem::Version.new(Stagehand::VERSION))
+          return check(:stagehand, :fail, "Stagehand version is outside the tested 3.21.x series")
+        end
         check(:stagehand, :pass, "stagehand #{Stagehand::VERSION} is available")
       rescue LoadError
         check(:stagehand, :warn, "the stagehand SDK is not installed; only fake backends can start")
       end
 
       def egress_check
-        return nil unless backend
+        return check(:egress_isolation, :fail, "no backend was supplied") unless backend
 
         capabilities = backend.capabilities
         if capabilities.enforced_egress?
@@ -118,7 +121,7 @@ module RubyLLM
 
       def summary_for(checks)
         failed = checks.select { |check| check[:status] == :fail }
-        return "ready for a qualified live session" if failed.empty?
+        return "configuration checks passed; live provider guarantees are not verified" if failed.empty?
 
         "blocked: #{failed.map { |check| check[:name] }.join(", ")}"
       end

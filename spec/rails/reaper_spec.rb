@@ -62,7 +62,7 @@ RSpec.describe RubyLLM::Browser::Rails::Reaper do
 
   it "leaves an unconfirmed outcome unknown with its reservation held" do
     unknown = RubyLLM::Browser::FakeBackend.new(reconcile_state: :unknown)
-    operation = reserve!(state: :unknown, session_id: "s1")
+    operation = reserve!(state: :unknown)
 
     summary = reaper(backend: unknown).sweep(now: now)
 

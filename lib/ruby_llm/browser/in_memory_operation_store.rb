@@ -29,7 +29,11 @@ module RubyLLM
       def attach_or_reserve(operation)
         synchronize do
           existing = find_by_idempotency_key(operation.actor_id, operation.run_id, operation.idempotency_key)
-          return existing if existing
+          if existing
+            raise InvalidInput, "idempotency key belongs to a different request" unless existing.request_digest == operation.request_digest
+
+            return existing
+          end
 
           reserve_locked(operation)
         end
@@ -59,11 +63,51 @@ module RubyLLM
       def update(operation)
         synchronize do
           stored = @operations.fetch(operation.id) { raise InvalidInput, "unknown operation #{operation.id.inspect}" }
-          if operation.fence < stored.fence
-            raise InvalidInput, "stale operation writer (fenced at #{stored.fence})"
-          end
-
+          operation.validate_update!(stored)
           @operations[operation.id] = operation
+        end
+      end
+
+      def claim_start(operation, now:)
+        synchronize do
+          stored = @operations.fetch(operation.id)
+          operation.validate_update!(stored)
+          raise InvalidInput, "operation was already started" unless stored.state == :reserved
+          raise BudgetExhausted, "operation wall-clock budget exhausted" if stored.expired?(now)
+
+          @operations[operation.id] = stored.advance(:starting, now: now)
+        end
+      end
+
+      def record_session(operation, session_id:, now:)
+        synchronize do
+          stored = @operations.fetch(operation.id)
+          assert_actor!(stored, operation.actor_id, operation.run_id)
+          raise InvalidInput, "operation session cannot change" if stored.session_id && stored.session_id != session_id
+
+          target = stored.fence == operation.fence ? :active : :cleanup_pending
+          @operations[operation.id] = stored.advance(target, session_id: session_id, now: now)
+        end
+      end
+
+      def confirm_closed(operation, session_id:, now:)
+        synchronize do
+          stored = @operations.fetch(operation.id)
+          assert_actor!(stored, operation.actor_id, operation.run_id)
+          raise InvalidInput, "operation session cannot change" unless stored.session_id == session_id
+
+          target = stored.cancel_requested? ? :cancelled : :closed
+          @operations[operation.id] = stored.advance(target, now: now)
+        end
+      end
+
+      def cancel(id, actor_id:, run_id:, now:)
+        synchronize do
+          operation = @operations.fetch(id) { raise InvalidInput, "unknown operation" }
+          assert_actor!(operation, actor_id, run_id)
+          return operation if operation.terminal? || operation.cancel_requested?
+
+          @operations[id] = operation.with_fence(operation.fence + 1, now: now).request_cancel(now: now)
         end
       end
 

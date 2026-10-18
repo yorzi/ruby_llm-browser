@@ -22,6 +22,7 @@ require "active_record"
 require "active_job"
 
 require_relative "rails/schema"
+require_relative "rails/actor_record"
 require_relative "rails/operation_record"
 require_relative "rails/approval_record"
 require_relative "rails/active_record_operation_store"

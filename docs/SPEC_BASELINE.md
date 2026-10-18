@@ -39,6 +39,25 @@ separate specifications repository; this file records exactly which baseline was
 4. **Frame and lib style:** explicit `require_relative` chain (no Zeitwerk loader) so the
    load graph is fully predictable and the no-Rails guarantee is easy to prove.
 
+## Audit corrections (2026-10-18)
+
+- Restrict Stagehand to `~> 3.21.0`, not all future 3.x minors; add JSONSchemer for
+  schema/instance validation.
+- The Engine now refuses live Act. The full same-session/page/target protocol in this
+  baseline is not implemented; earlier fake-only PASS claims did not establish it.
+- Final URLs are no longer inferred when navigation results omit them. The pinned SDK
+  permits null results, so actual server behavior must be qualified.
+- SQLite's ignored SELECT FOR UPDATE needs an actual write lock; actor-lock rows and
+  atomic start claims now enforce reservations and duplicate-delivery safety.
+- Cancellation holds quota after dispatch until cleanup is confirmed. Prior terminal
+  cancellation and swallowed reaper-write failures were not evidence of safe cleanup.
+- No cost ledger or hard currency cap is implemented. Retained-result limits do not
+  cap provider response allocations or browser bandwidth.
+
+These corrections harden engineering behavior without claiming a specification scope
+change, H1/H2 approval, live use authorization, or release clearance. See
+[the audit](RELEASE_AUDIT.md) for unresolved protocol/product decisions.
+
 ## Outstanding blockers (carried from the spec baseline)
 
 These are **not** satisfied by this repository yet and block a public release or live use.

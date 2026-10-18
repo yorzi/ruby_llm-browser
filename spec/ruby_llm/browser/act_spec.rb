@@ -106,9 +106,11 @@ RSpec.describe RubyLLM::Browser::Act do
       chat.with_tools(tool)
       call = tool_call("apr-missing")
 
-      expect(chat.send(:execution_decision, call)).to be(false)
+      chat.add_message(role: :assistant, content: nil, tool_calls: { call.id => call })
       chat.approve(call)
-      expect(chat.send(:execution_decision, call)).to be(false)
+      chat.run_tools
+      expect(backend.call_count(:act)).to eq(0)
+      expect(chat.messages.last.role).to eq(:tool)
     end
 
     it "permits the call once a host grant exists, without consuming it early" do
@@ -116,8 +118,15 @@ RSpec.describe RubyLLM::Browser::Act do
       chat = RubyLLM::Chat.new(model: "gpt-4o-mini")
       chat.with_tools(tool)
 
-      expect(chat.send(:execution_decision, tool_call(approval.id))).to be(true)
+      call = RubyLLM::ToolCall.new(id: "call-1", name: "browser_act", arguments: {
+        "url" => url, "approval_id" => approval.id, "method" => "click", "selector" => "a#docs"
+      })
+      chat.add_message(role: :assistant, content: nil, tool_calls: { call.id => call })
+      expect(chat.awaiting_approval?).to be(false)
       expect(approval_store.fetch(approval.id)).not_to be_consumed
+      chat.run_tools
+      expect(backend.call_count(:act)).to eq(1)
+      expect(approval_store.fetch(approval.id)).to be_consumed
     end
   end
 end

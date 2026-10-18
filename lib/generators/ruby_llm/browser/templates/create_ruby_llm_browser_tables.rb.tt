@@ -6,6 +6,10 @@
 # single-use approvals. They are not business truth and must not be edited by hand.
 class CreateRubyLlmBrowserTables < ActiveRecord::Migration[<%= ActiveRecord::Migration.current_version %>]
   def change
+    create_table :ruby_llm_browser_actors, id: :string do |t|
+      t.integer :sequence, null: false, default: 0
+    end
+
     create_table :ruby_llm_browser_operations, id: false do |t|
       t.string :id, null: false, primary_key: true
       t.string :actor_id, null: false
@@ -13,10 +17,12 @@ class CreateRubyLlmBrowserTables < ActiveRecord::Migration[<%= ActiveRecord::Mig
       t.string :state, null: false
       t.string :session_id
       t.string :idempotency_key
+      t.string :request_digest
       t.integer :steps, null: false, default: 0
       t.integer :bytes, null: false, default: 0
       t.integer :fence, null: false, default: 0
       t.string :error_code
+      t.boolean :cancel_requested, null: false, default: false
       t.text :budget, null: false
       t.datetime :created_at
       t.datetime :updated_at

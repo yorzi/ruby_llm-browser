@@ -22,6 +22,8 @@ module RubyLLM
             session_id: session_id, idempotency_key: idempotency_key,
             steps: steps, bytes: bytes, fence: fence, error_code: error_code,
             budget: self.class.load_budget(budget),
+            cancel_requested: cancel_requested,
+            request_digest: request_digest,
             created_at: self.class.to_time(created_at), updated_at: self.class.to_time(updated_at)
           )
         end

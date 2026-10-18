@@ -68,9 +68,9 @@ module RubyLLM
       # @param resolver [Object] a Resolv-like object responding to `getaddresses`
       def initialize(allowed_hosts:, allowed_schemes: DEFAULT_SCHEMES, allowed_ports: DEFAULT_PORTS,
                      verify_dns: true, resolver: nil)
-        @allowed_hosts = normalize_allowlist!(allowed_hosts)
-        @allowed_schemes = normalize_schemes!(allowed_schemes)
-        @allowed_ports = normalize_ports!(allowed_ports)
+        @allowed_hosts = Immutable.copy(normalize_allowlist!(allowed_hosts))
+        @allowed_schemes = Immutable.copy(normalize_schemes!(allowed_schemes))
+        @allowed_ports = Immutable.copy(normalize_ports!(allowed_ports))
         @verify_dns = verify_dns
         @resolver = resolver || Resolv
         freeze
@@ -144,8 +144,8 @@ module RubyLLM
         raise InvalidInput, "url is missing a scheme and host" if uri.host.nil? || uri.scheme.nil?
 
         uri
-      rescue URI::InvalidURIError => e
-        raise InvalidInput, "url is not a valid URI: #{e.message}"
+      rescue URI::InvalidURIError
+        raise InvalidInput, "url is not a valid URI", cause: nil
       end
 
       def normalize_host!(uri)
@@ -208,8 +208,8 @@ module RubyLLM
         query = uri.query
         normalized = URI.parse("#{scheme}://#{authority}#{path}#{query ? "?#{query}" : ""}")
         normalized.freeze
-      rescue URI::InvalidURIError => e
-        raise InvalidInput, "url is not a valid URI: #{e.message}"
+      rescue URI::InvalidURIError
+        raise InvalidInput, "url is not a valid URI", cause: nil
       end
 
       def normalize_allowlist!(hosts)

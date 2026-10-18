@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Verifies the artifact from outside the checkout with genuinely isolated dependencies.
+# Network use is limited to gem installation; smoke scripts use only FakeBackend.
+require "digest"
+require "json"
+require "open3"
+require "rbconfig"
+require "tmpdir"
+
+supplied = ARGV.find { |arg| !arg.start_with?("--") }
+artifact = supplied ? File.expand_path(supplied) : File.expand_path("../pkg/ruby_llm-browser-0.1.0.gem", __dir__)
+abort "Build the artifact first: bundle exec rake build" unless File.file?(artifact)
+base = ENV.fetch("TMPDIR", Dir.tmpdir)
+home = Dir.mktmpdir("browser-package-", base)
+environment = {
+  "GEM_HOME" => home, "GEM_PATH" => home, "RUBYOPT" => nil, "RUBYLIB" => nil,
+  "BUNDLE_GEMFILE" => nil, "BUNDLE_BIN_PATH" => nil
+}
+run = lambda do |label, *arguments|
+  stdout, stderr, status = Open3.capture3(environment, RbConfig.ruby, *arguments, chdir: home)
+  File.write(File.join(home, "#{label}.log"), stdout + stderr)
+  abort "#{label} failed (#{home}):\n#{stdout}\n#{stderr}" unless status.success?
+
+  stdout
+end
+
+verification = lambda do
+  run.call("install", "-S", "gem", "install", artifact, "--no-document")
+  puts run.call("core", "-e", <<~'RUBY')
+    require "json"
+    require "ruby_llm/browser"
+    loaded = $LOADED_FEATURES.grep(%r{/(?:active_record|active_job|railties)/|/stagehand/client\.rb})
+    raise "core loaded framework or SDK client" unless loaded.empty?
+    specification = Gem.loaded_specs.fetch("ruby_llm-browser")
+    raise "activated the checkout" unless specification.full_gem_path.start_with?(ENV.fetch("GEM_HOME"))
+    %w[docs/API.md docs/RAILS.md docs/RELEASE_AUDIT.md examples/plain_ruby.rb].each do |path|
+      raise "missing #{path}" unless File.file?(File.join(specification.full_gem_path, path))
+    end
+    load File.join(specification.full_gem_path, "examples/plain_ruby.rb")
+    File.write(File.join(ENV.fetch("GEM_HOME"), "activated-versions.json"),
+               JSON.pretty_generate(Gem.loaded_specs.transform_values { |s| s.version.to_s }))
+    puts "CORE_PACKAGE_PASS"
+  RUBY
+  if ARGV.include?("--audit")
+    require "bundler/audit/database"
+    database = Bundler::Audit::Database.new
+    vulnerable = []
+    JSON.parse(File.read(File.join(home, "activated-versions.json"))).each do |name, version|
+      specification = Gem::Specification.new { |spec| spec.name = name; spec.version = version }
+      database.check_gem(specification) { |advisory| vulnerable << "#{name} #{version}: #{advisory.id}" }
+    end
+    abort vulnerable.join("\n") unless vulnerable.empty?
+
+    puts "CLEAN_RUNTIME_ADVISORIES_PASS"
+  end
+  if ARGV.include?("--rails")
+    run.call("install-rails", "-S", "gem", "install", "activerecord:8.1.4", "activejob:8.1.4",
+             "railties:8.1.4", "sqlite3:2.10.0", "--no-document")
+    puts run.call("rails", "-e", <<~'RUBY')
+      require "ruby_llm/browser/rails"
+      require "rails/generators"
+      specification = Gem.loaded_specs.fetch("ruby_llm-browser")
+      load File.join(specification.full_gem_path, "examples/rails_adapter.rb")
+      generator = ::Rails::Generators.find_by_namespace("ruby_llm:browser:install")
+      raise "generator not discoverable" unless generator
+      generated = File.join(ENV.fetch("GEM_HOME"), "generated")
+      generator.start([], destination_root: generated, quiet: true)
+      migration_path = Dir[File.join(generated, "db/migrate/*.rb")].fetch(0)
+      ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+      load migration_path
+      migration = CreateRubyLlmBrowserTables.new
+      migration.suppress_messages { migration.migrate(:up) }
+      raise "missing actor lock" unless ActiveRecord::Base.connection.table_exists?("ruby_llm_browser_actors")
+      migration.suppress_messages { migration.migrate(:down) }
+      puts "RAILS_PACKAGE_PASS"
+    RUBY
+  end
+end
+
+if defined?(Bundler)
+  Bundler.with_unbundled_env(&verification)
+else
+  verification.call
+end
+puts "SHA256=#{Digest::SHA256.file(artifact).hexdigest}"
+puts "EVIDENCE=#{home}"

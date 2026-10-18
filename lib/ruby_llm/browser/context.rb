@@ -28,11 +28,11 @@ module RubyLLM
         @source_policy = policy!(source_policy)
         @operation_store = store!(operation_store)
         @approval_store = approval_store!(approval_store)
-        @budget = budget.nil? ? Configuration.new.default_budget : budget!(budget)
+        @budget = budget.nil? ? RubyLLM::Browser.configuration.default_budget : budget!(budget)
         @clock = clock || RubyLLM::Browser.clock
         @logger = logger || RubyLLM::Browser.logger
         @consent = consent
-        @metadata = metadata || {}
+        @metadata = Immutable.copy(metadata || {})
         freeze
       end
 
@@ -73,7 +73,7 @@ module RubyLLM
       def presence!(value, name)
         raise InvalidInput, "#{name} must be a non-empty String" unless value.is_a?(String) && !value.empty?
 
-        value
+        value.dup.freeze
       end
 
       def backend!(value)

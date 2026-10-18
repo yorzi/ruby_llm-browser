@@ -63,7 +63,7 @@ module RubyLLM
       private
 
       def positive_number!(value, name)
-        unless value.is_a?(Numeric) && value.positive?
+        unless value.is_a?(Numeric) && value.finite? && value.positive?
           raise InvalidInput, "#{name} must be a positive number"
         end
 
@@ -71,7 +71,7 @@ module RubyLLM
       end
 
       def non_negative_number!(value, name)
-        unless value.is_a?(Numeric) && value >= 0
+        unless value.is_a?(Numeric) && value.finite? && value >= 0
           raise InvalidInput, "#{name} must be a non-negative number"
         end
 

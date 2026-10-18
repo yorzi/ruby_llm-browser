@@ -21,6 +21,7 @@ Thanks for helping. This is an unofficial community extension for
 bin/setup          # bundle install
 bundle exec rake   # specs + rubocop
 bundle exec rspec  # specs only
+bundle exec bundle-audit check --update
 bundle exec rubocop -A   # autocorrect style
 ```
 
@@ -29,6 +30,9 @@ bundle exec rubocop -A   # autocorrect style
 - Add a failing spec first, including the negative/denial case.
 - Update `CHANGELOG.md` under `Unreleased`.
 - Update `docs/SECURITY_MODEL.md` or `README.md` if a boundary or public API moved.
+- Keep runnable examples and the package's local links green in
+  `spec/integration/documentation_spec.rb`.
+- Run both alternate bundles in `gemfiles/` when changing Tool or Rails integration.
 - Keep the Gem core loadable without Rails: `ruby -e 'require "ruby_llm/browser"'` must
   not load `rails`, `active_job` or open any browser session.
 

@@ -50,6 +50,15 @@ module RubyLLM
     # never automatically retried into a second session.
     class SessionUnknown < Error
       CODE = "SESSION_UNKNOWN"
+
+      # A returned identity must still be tracked/closed after a partial start failure.
+      # It is internal bookkeeping and is deliberately absent from Error#to_h.
+      attr_reader :session
+
+      def initialize(message = nil, session: nil)
+        @session = session
+        super(message)
+      end
     end
 
     # Cleanup was attempted but is not confirmed. The reservation is held until closure

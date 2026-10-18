@@ -18,6 +18,11 @@ module RubyLLM
         # Creates any missing tables. Existing tables are left untouched, so this is
         # safe to call from a test harness or a boot task.
         def create!(connection = ActiveRecord::Base.connection)
+          unless connection.table_exists?("ruby_llm_browser_actors")
+            connection.create_table("ruby_llm_browser_actors", id: :string) do |table|
+              table.integer :sequence, null: false, default: 0
+            end
+          end
           create_operations!(connection) unless connection.table_exists?(OPERATIONS_TABLE)
           create_approvals!(connection) unless connection.table_exists?(APPROVALS_TABLE)
           true
@@ -31,10 +36,12 @@ module RubyLLM
             table.string :state, null: false
             table.string :session_id
             table.string :idempotency_key
+            table.string :request_digest
             table.integer :steps, null: false, default: 0
             table.integer :bytes, null: false, default: 0
             table.integer :fence, null: false, default: 0
             table.string :error_code
+            table.boolean :cancel_requested, null: false, default: false
             table.text :budget, null: false
             table.datetime :created_at
             table.datetime :updated_at

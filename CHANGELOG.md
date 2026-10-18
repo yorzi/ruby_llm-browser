@@ -4,7 +4,33 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-10-17
+## [Unreleased]
+
+Planned version: 0.1.0. No public release has been published.
+
+### Fixed
+
+- Atomic start claims, actor quota locking, payload-bound idempotency, exact fence/state
+  checks, cancellation quota retention, and cleanup after post-start persistence errors.
+- Reaper fencing before cleanup and recovery of known sessions without a correlation API.
+- Host/operation output ceilings, UTF-8/escaped-JSON bounds, retained byte accounting,
+  malformed schema handling, and provider extraction schema validation.
+- Defensive policy/approval/schema copies, safer progress/errors/provenance, and suppressed
+  Active Job argument logging.
+- Real-clock durable timestamp round-trips and effective process budget/result defaults.
+- Stagehand response validation, explicit disabled self-healing/CAPTCHA solving/recording,
+  environment-drift rejection, remaining-time timeouts, and no guessed final URL.
+- Rails install generator namespace, README API errors, shipped documentation/examples,
+  and RubyLLM 2.0/2.1 public-API compatibility tests.
+
+### Security
+
+- Require patched CGI, DNS resolver, URI and zlib versions instead of accepting old
+  vulnerable default gems on a clean Ruby installation.
+- Live Act is refused before session start pending the required same-session approval
+  protocol. Offline Act simulations remain available. Provider egress/TTL/billing and
+  owner name/license/governance gates still block public release.
+- See `docs/RELEASE_AUDIT.md` for findings, mitigations and residual limits.
 
 The first implementation milestone. Everything below is proven offline against the fake
 backend and an in-memory SQLite database; **no live browser provider call has been run**,
@@ -16,7 +42,7 @@ and mocked tests never establish remote egress isolation, TTL or billing limits.
   and no provider credentials loaded on require.
 - Read-only `RubyLLM::Browser::Inspect` and `Extract` tools; `Extract` takes a
   host-pinned schema instead of a model-supplied one.
-- Opt-in `RubyLLM::Browser::Act` (never registered by default) with a read-only RubyLLM
+- Simulation-only `RubyLLM::Browser::Act` (never registered by default) with a read-only RubyLLM
   approval resolver and an atomic, digest-bound, single-use approval consumed in `execute`.
 - Source policy: URL normalization with userinfo/scheme/port and ambiguous-IP rejection,
   allowlist matching, and fail-closed egress qualification that returns

@@ -8,7 +8,7 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
     described_class.new(
       browserbase_api_key: "bb-secret-key-1234", model_api_key: "model-secret-key-5678",
       model_name: "openai/gpt-4o-mini", egress_isolation: :enforced,
-      env: env, client: client
+      env: env, client: client, act_supported: true
     )
   end
 
@@ -17,7 +17,7 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
   let(:env) { {} }
   let(:now) { Time.utc(2026, 10, 17, 12, 0, 0) }
   let(:context) { instance_double(RubyLLM::Browser::Context, actor_id: "actor-1", run_id: "run-1") }
-  let(:operation) { instance_double(RubyLLM::Browser::Operation, id: "op-1") }
+  let(:operation) { build_operation(id: "op-1") }
   let(:session) { RubyLLM::Browser::Session.new(id: "sess-1", url: "https://docs.example.com/a") }
 
   def response(data, success = true)
@@ -96,7 +96,7 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
 
   describe "#navigate" do
     it "returns the session at the requested URL" do
-      allow(sessions).to receive(:navigate).and_return(response(data(result: {})))
+      allow(sessions).to receive(:navigate).and_return(response(data(result: { "url" => "https://docs.example.com/b" })))
       moved = backend.navigate(session, url: "https://docs.example.com/b", operation: operation, now: now)
 
       expect(moved.url).to eq("https://docs.example.com/b")

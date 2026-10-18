@@ -4,6 +4,8 @@ module RubyLLM
   module Browser
     # One host-approved browser action. Disabled unless the host configures an
     # {ApprovalStore} and issues a matching single-use {Approval}.
+    # Currently simulation-only: {Engine} refuses all non-fake Act backends until the
+    # required same-session/target approval protocol is implemented.
     #
     # `Act` is opt-in and must never be registered by default. Two gates protect it:
     #
@@ -46,7 +48,7 @@ module RubyLLM
                             description: "Optional string arguments for the method, such as the text to type or the key to press"
 
       def execute(url:, approval_id:, method:, selector:, description: nil, arguments: nil)
-        report("Acting on #{url}: #{method} #{selector}")
+        report("Checking an approved browser action")
         action = {
           "method" => method,
           "selector" => selector,
@@ -56,6 +58,8 @@ module RubyLLM
         engine.act(url: url, approval_id: approval_id, action: action).to_h
       rescue Error => e
         failure(e)
+      rescue StandardError
+        unexpected_failure
       end
 
       # The instance-level resolver so it can read this tool's host {ApprovalStore}.

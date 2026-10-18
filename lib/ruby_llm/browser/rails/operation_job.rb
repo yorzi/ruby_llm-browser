@@ -23,6 +23,8 @@ module RubyLLM
       #     )
       #   end
       class OperationJob < ActiveJob::Base
+        # Do not write URLs, instructions or host-pinned schemas into Active Job logs.
+        self.log_arguments = false
         class << self
           # ->(actor_id:, run_id:) { RubyLLM::Browser::Context }
           attr_accessor :context_factory
@@ -37,11 +39,18 @@ module RubyLLM
           # @return [Operation] the reserved or attached operation
           def enqueue(actor_id:, run_id:, kind:, url:, budget:, idempotency_key: nil,
                       instruction: nil, schema: nil, max_bytes: nil, store: nil, now: nil)
-            store ||= RubyLLM::Browser::Rails.operation_store
+            configured_store = operation_store || RubyLLM::Browser::Rails.operation_store
+            store ||= configured_store
+            raise InvalidInput, "enqueue must use the job's operation store" unless store.equal?(configured_store)
             now ||= RubyLLM::Browser::Rails.clock.call
+            unless %w[inspect extract].include?(kind.to_s)
+              raise InvalidInput, "browser jobs support inspect and extract only"
+            end
             candidate = Operation.new(
               id: Operation.generate_id, actor_id: actor_id, run_id: run_id, budget: budget,
-              state: :reserved, idempotency_key: idempotency_key, created_at: now, updated_at: now
+              state: :reserved, idempotency_key: idempotency_key, created_at: now, updated_at: now,
+              request_digest: request_digest(kind: kind, url: url, instruction: instruction,
+                                             schema: schema, max_bytes: max_bytes, budget: budget)
             )
             operation = store.attach_or_reserve(candidate)
             perform_later(
@@ -49,6 +58,12 @@ module RubyLLM
               url: url, instruction: instruction, schema: schema, max_bytes: max_bytes
             )
             operation
+          end
+
+          # Binds an idempotency key to the exact host-issued payload and budget.
+          def request_digest(kind:, url:, instruction:, schema:, max_bytes:, budget:)
+            Redactor.digest(kind: kind.to_s, url: url, instruction: instruction, schema: schema,
+                            max_bytes: max_bytes, budget: budget.to_h)
           end
         end
 
@@ -60,6 +75,11 @@ module RubyLLM
           return :missing if operation.nil?
 
           assert_scope!(operation, actor_id, run_id)
+          digest = self.class.request_digest(kind: kind, url: url, instruction: instruction,
+                                             schema: schema, max_bytes: max_bytes, budget: operation.budget)
+          if operation.request_digest && operation.request_digest != digest
+            raise NotAuthorized, "job payload does not match the reserved request"
+          end
           return :cancelled if operation.state == :cancelled
           return :terminal if operation.terminal?
           return :attached unless operation.state == :reserved
@@ -70,7 +90,11 @@ module RubyLLM
           result = run(kind, leased, url: url, instruction: instruction, schema: schema,
                                      max_bytes: max_bytes)
 
-          settled(operation_id) || result.to_h
+          # Keep unknown action/start results, even when cleanup later closes a session.
+          final = settled(operation_id)
+          return :cancelled if final == :cancelled
+
+          result.ok? ? (final || result.to_h) : result.to_h
         rescue InvalidInput => e
           raise unless fenced?(e)
 
@@ -92,7 +116,11 @@ module RubyLLM
         end
 
         def run(kind, operation, url:, instruction:, schema:, max_bytes:)
-          engine = Engine.new(context: build_context(operation))
+          context = build_context(operation)
+          unless context.is_a?(Context) && context.operation_store.equal?(store)
+            raise InvalidInput, "job context must use the job's operation store"
+          end
+          engine = Engine.new(context: context)
           case kind.to_s
           when "inspect"
             engine.inspect(url: url, instruction: instruction, max_bytes: max_bytes, operation: operation)

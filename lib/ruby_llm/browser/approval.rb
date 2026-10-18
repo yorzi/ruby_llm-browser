@@ -23,12 +23,12 @@ module RubyLLM
         @action_digest = presence!(action_digest, :action_digest)
         @expires_at = time!(expires_at, :expires_at)
         @issued_at = time!(issued_at, :issued_at)
-        @page_revision = page_revision
-        @operation_id = operation_id
-        @session_id = session_id
-        @consumed_at = consumed_at
+        @page_revision = Immutable.copy(page_revision)
+        @operation_id = Immutable.copy(operation_id)
+        @session_id = Immutable.copy(session_id)
+        @consumed_at = Immutable.copy(consumed_at)
         @revoked = !!revoked
-        @action = action
+        @action = Immutable.copy(action)
         freeze
       end
 
@@ -90,15 +90,15 @@ module RubyLLM
         {
           id: id, actor_id: actor_id, run_id: run_id, url: url,
           action_digest: action_digest, action: action, page_revision: page_revision,
-          operation_id: operation_id, issued_at: issued_at, expires_at: expires_at,
-          consumed_at: consumed_at
+          operation_id: operation_id, session_id: session_id, issued_at: issued_at, expires_at: expires_at,
+          consumed_at: consumed_at, revoked: revoked?
         }
       end
 
       def digest = Redactor.digest(to_h)
 
       def inspect
-        "#<#{self.class} id=#{id} actor=#{actor_id} url=#{url.inspect} expires_at=#{expires_at&.utc&.iso8601}>"
+        "#<#{self.class} id=#{id} actor=#{actor_id} expires_at=#{expires_at&.getutc&.iso8601}>"
       end
 
       private
@@ -115,13 +115,13 @@ module RubyLLM
       def presence!(value, name)
         raise InvalidInput, "#{name} must be a non-empty String" unless value.is_a?(String) && !value.empty?
 
-        value
+        value.dup.freeze
       end
 
       def time!(value, name)
         raise InvalidInput, "#{name} must be a Time" unless value.is_a?(Time)
 
-        value
+        value.dup.freeze
       end
     end
   end

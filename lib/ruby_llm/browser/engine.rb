@@ -48,7 +48,8 @@ module RubyLLM
         execute(url: url, operation: operation) do |attempt|
           attempt.operation = next_step(attempt.operation)
           data = backend.extract(attempt.session, schema: validated, instruction: instruction,
-                                 operation: attempt.operation, now: now)
+                                  operation: attempt.operation, now: now)
+          policy.authorize_extraction!(data, schema: validated)
           ok_result(
             attempt.operation, data, session: attempt.session,
             locator: { "url" => current_url(attempt), "scope" => "extract",
@@ -61,6 +62,12 @@ module RubyLLM
       # One human-approved action. Disabled unless an approval store is configured and an
       # active, exactly-bound, single-use approval exists.
       def act(url:, approval_id:, action:, page_revision: nil, operation: nil)
+        unless capabilities.server_mode == :fake
+          raise UnsupportedSecurityCapability, "live Act is unavailable until same-session approval is implemented"
+        end
+        unless capabilities.act_supported?
+          raise UnsupportedSecurityCapability, "backend does not support qualified Act"
+        end
         normalized = policy.authorize_action!(action)
         require_approval_store!
         execute(url: url, operation: operation) do |attempt|
@@ -68,7 +75,10 @@ module RubyLLM
           attempt.operation = next_step(attempt.operation)
           observed = backend.observe(attempt.session, instruction: nil,
                                      operation: attempt.operation, now: now)
-          revision = page_revision || Approval.page_revision(observed)
+          revision = Approval.page_revision(observed)
+          if page_revision && page_revision != revision
+            raise ApprovalStale, "the current page does not match the requested revision"
+          end
           approval = consume_approval!(approval_id, attempt: attempt, action: normalized,
                                        page_revision: revision)
           attempt.operation = next_step(attempt.operation)
@@ -88,36 +98,46 @@ module RubyLLM
         policy.authorize_egress!(capabilities)
         uri = policy.authorize_destination!(url, actor_id: context.actor_id)
         operation = reserve(uri, operation)
-        operation = transition(operation, :starting)
+        operation = store.claim_start(operation, now: now)
+        attempt = Attempt.new(operation: operation, uri: uri)
+        outcome = nil
 
-        session =
+        begin
           begin
-            backend.start(context: context, operation: operation, now: now)
-          rescue SessionUnknown => e
-            transition(operation, :unknown, error_code: e.code)
-            return Result.failure(:unknown, error_code: e.code, message: e.message,
-                                  operation_id: operation.id, final_url: uri.to_s)
+            attempt.session = backend.start(context: context, operation: operation, now: now)
           rescue ProviderError => e
-            transition(operation, :closed, error_code: e.code)
-            return Result.failure(:error, error_code: e.code, message: e.message,
-                                  operation_id: operation.id, final_url: uri.to_s)
-          end
-
-        operation = transition(operation, :active, session_id: session.id)
-        attempt = Attempt.new(operation: operation, session: session, uri: uri)
-
-        outcome =
-          begin
-            attempt.operation = next_step(attempt.operation)
-            attempt.session = navigate(attempt)
-            yield attempt
-          rescue Error => e
-            failure_result(e, attempt)
+            safe_transition(operation, :closed, error_code: e.code)
+            return Result.failure(:error, error_code: e.code, message: "browser provider rejected session start",
+                                  operation_id: operation.id, final_url: safe_url(uri.to_s))
           rescue StandardError => e
-            failure_result(ProviderError.new("unexpected backend failure: #{e.class}"), attempt)
+            error = e.is_a?(SessionUnknown) ? e : SessionUnknown.new("session start outcome is unconfirmed")
+            if error.session
+              attempt.session = error.session
+              attempt.operation = store.record_session(operation, session_id: error.session.id, now: now)
+              raise error
+            end
+            safe_transition(operation, :unknown, error_code: error.code)
+            return Result.failure(:unknown, error_code: error.code, message: error.message,
+                                  operation_id: operation.id, final_url: safe_url(uri.to_s))
           end
 
-        finish(attempt, outcome)
+          stored = store.record_session(operation, session_id: attempt.session.id, now: now)
+          if stored.fence != operation.fence
+            raise InvalidInput, "starting worker was fenced or cancelled"
+          end
+          attempt.operation = stored
+          attempt.operation = next_step(attempt.operation)
+          attempt.session = navigate(attempt)
+          outcome = yield attempt
+          attempt.operation = store.fetch!(attempt.operation.id)
+        rescue Error => e
+          outcome = failure_result(e, attempt)
+        rescue StandardError
+          outcome = failure_result(ProviderError.new("browser backend or bookkeeping failed"), attempt)
+        ensure
+          outcome = finish(attempt, outcome) if attempt.session
+        end
+        outcome
       end
 
       def reserve(uri, provided = nil)
@@ -142,6 +162,7 @@ module RubyLLM
         unless operation.budget == context.budget
           raise InvalidInput, "reserved operation budget does not match the context budget"
         end
+        raise InvalidInput, "operation must be reserved" unless operation.state == :reserved
 
         operation
       end
@@ -155,13 +176,17 @@ module RubyLLM
       end
 
       def ok_result(operation, data, session:, locator:, max_bytes:)
+        raise BudgetExhausted, "operation wall-clock budget exhausted" if operation.expired?(now)
+        limit = [ max_bytes || policy.max_result_bytes, policy.max_result_bytes, operation.remaining_bytes ].min
+        raise BudgetExhausted, "operation byte budget exhausted" unless limit.positive?
         bounded, truncated = policy.authorize_result!(
-          data, max_bytes: max_bytes || policy.max_result_bytes, secrets: context.secrets
+          data, max_bytes: limit, secrets: context.secrets
         )
         stored = store.update(operation.add_bytes!(Redactor.canonical_json(bounded).bytesize, now: now))
         Result.ok(
-          data: bounded, operation_id: stored.id, final_url: session.url.to_s,
-          captured_at: now, locator: locator, digest: Redactor.digest(bounded), truncated: truncated
+          data: bounded, operation_id: stored.id, final_url: safe_url(session.url.to_s),
+          captured_at: now, locator: locator.merge("url" => safe_url(session.url.to_s)),
+          digest: Redactor.digest(bounded), truncated: truncated
         )
       end
 
@@ -169,14 +194,14 @@ module RubyLLM
         status = status_for(error)
         recorded =
           if status == :error
-            attempt.operation
+            safe_transition(attempt.operation, attempt.operation.state, error_code: error.code)
           else
             safe_transition(attempt.operation, status, error_code: error.code)
           end
         attempt.operation = recorded
         Result.failure(
-          status, error_code: error.code, message: error.message,
-          operation_id: recorded.id, final_url: attempt.session&.url.to_s
+          status, error_code: error.code, message: Redactor.scrub_string(error.message, secrets: context.secrets),
+          operation_id: recorded.id, final_url: safe_url(attempt.uri.to_s)
         )
       end
 
@@ -185,22 +210,27 @@ module RubyLLM
         closed =
           begin
             backend.end_session(attempt.session, operation: closing, now: now)
-          rescue Error
+          rescue StandardError
             false
           end
 
         if closed
-          safe_transition(closing, :closed)
+          begin
+            store.confirm_closed(closing, session_id: attempt.session.id, now: now)
+          rescue StandardError
+            return cleanup_failure(attempt)
+          end
           outcome
         else
           safe_transition(closing, :cleanup_pending, error_code: CleanupPending.code)
-          Result.failure(
-            :cleanup_pending, error_code: CleanupPending.code,
-            message: "browser session cleanup could not be confirmed",
-            operation_id: closing.id, final_url: attempt.session&.url.to_s,
-            data: outcome.ok? ? outcome.data : nil
-          )
+          cleanup_failure(attempt)
         end
+      end
+
+      def cleanup_failure(attempt)
+        Result.failure(:cleanup_pending, error_code: CleanupPending.code,
+                       message: "browser session cleanup could not be confirmed",
+                       operation_id: attempt.operation.id, final_url: safe_url(attempt.uri.to_s))
       end
 
       # Navigates the freshly started session to the requested URL and re-checks the
@@ -215,7 +245,8 @@ module RubyLLM
 
       def ensure_within_policy!(session, uri)
         final = session.url.to_s
-        return if final.empty? || final == uri.to_s
+        raise ProviderError, "browser did not report a destination URL" if final.empty?
+        return if final == uri.to_s
 
         policy.authorize_destination!(final, actor_id: context.actor_id)
       rescue NotAuthorized, InvalidInput => e
@@ -247,11 +278,6 @@ module RubyLLM
         updated = operation.advance(target, now: now, session_id: session_id,
                                     error_code: error_code.nil? ? :keep : error_code)
         store.update(updated)
-      rescue InvalidInput => e
-        raise unless e.message.include?("illegal operation transition")
-
-        context.logger&.warn { "browser operation transition skipped: #{e.message}" }
-        operation
       end
 
       # A transition that tolerates a store refusing the write.
@@ -262,9 +288,13 @@ module RubyLLM
       # kept; the durable reaper reconciles the row.
       def safe_transition(operation, target, session_id: :keep, error_code: nil)
         transition(operation, target, session_id: session_id, error_code: error_code)
-      rescue Error => e
-        context.logger&.warn { "browser bookkeeping rejected for #{operation.id}: #{e.message}" }
+      rescue StandardError
+        context.logger&.warn { "browser bookkeeping write rejected" }
         operation
+      end
+
+      def safe_url(url)
+        Redactor.url(url, secrets: context.secrets)
       end
 
       def status_for(error)

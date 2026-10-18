@@ -2,6 +2,7 @@
 
 require "digest"
 require "json"
+require "uri"
 
 module RubyLLM
   module Browser
@@ -56,7 +57,8 @@ module RubyLLM
         case value
         when Hash
           value.each_with_object({}) do |(key, nested), result|
-            result[key.to_s] = secret_key?(key) ? REDACTED : redact(nested, secrets: secrets, depth: depth + 1, max_depth: max_depth)
+            safe_key = scrub_string(key.to_s, secrets: secrets)
+            result[safe_key] = secret_key?(key) ? REDACTED : redact(nested, secrets: secrets, depth: depth + 1, max_depth: max_depth)
           end
         when Array
           value.map { |item| redact(item, secrets: secrets, depth: depth + 1, max_depth: max_depth) }
@@ -73,13 +75,31 @@ module RubyLLM
       #
       # @return [Array(Object, Boolean)] the bounded value and whether it was truncated
       def bound(value, max_bytes:, secrets: [])
+        unless max_bytes.is_a?(Integer) && max_bytes.positive?
+          raise InvalidInput, "max_bytes must be a positive integer"
+        end
         redacted = redact(value, secrets: secrets)
         json = canonical_json(redacted)
         return [ redacted, false ] if json.bytesize <= max_bytes
 
-        preview_limit = [ max_bytes - 64, 0 ].max
-        preview = json[0, preview_limit]
-        [ { "truncated" => true, "preview" => preview, "note" => TRUNCATED }, true ]
+        # Count encoded bytes, not characters: JSON escaping can expand a preview.
+        envelope = { "truncated" => true, "preview" => "", "note" => TRUNCATED }
+        return [ "", true ] if max_bytes < canonical_json(envelope).bytesize && max_bytes >= 2
+        return [ 0, true ] if max_bytes == 1
+
+        low = 0
+        high = [ json.length, max_bytes ].min
+        while low < high
+          midpoint = (low + high + 1) / 2
+          envelope["preview"] = json[0, midpoint]
+          if canonical_json(envelope).bytesize <= max_bytes
+            low = midpoint
+          else
+            high = midpoint - 1
+          end
+        end
+        envelope["preview"] = json[0, low]
+        [ envelope, true ]
       end
 
       # Stable JSON for digests: object keys sorted, no insignificant whitespace.
@@ -95,6 +115,21 @@ module RubyLLM
       # True when a key name denotes a secret value.
       def secret_key?(key)
         SECRET_KEY.match?(key.to_s)
+      end
+
+      # Removes userinfo, fragments and credential-like query values from provenance.
+      def url(value, secrets: [])
+        uri = URI.parse(value.to_s)
+        uri.userinfo = nil if uri.respond_to?(:userinfo=)
+        uri.fragment = nil
+        if uri.query
+          uri.query = URI.encode_www_form(URI.decode_www_form(uri.query).map do |key, nested|
+            [ key, secret_key?(key) ? REDACTED : nested ]
+          end)
+        end
+        scrub_string(uri.to_s, secrets: secrets)
+      rescue URI::Error, ArgumentError
+        "[REDACTED URL]"
       end
 
       def sort_keys(value)

@@ -28,11 +28,11 @@ module RubyLLM
                      digest: nil, data: nil, truncated: false, error_code: nil, error_message: nil)
         @status = normalize_status(status)
         @operation_id = operation_id
-        @final_url = final_url
-        @captured_at = captured_at
-        @locator = locator
-        @digest = digest
-        @data = data
+        @final_url = Immutable.copy(final_url)
+        @captured_at = Immutable.copy(captured_at)
+        @locator = Immutable.copy(locator)
+        @digest = Immutable.copy(digest)
+        @data = Immutable.copy(data)
         @truncated = truncated ? true : false
         @error_code = error_code
         @error_message = error_message
@@ -63,7 +63,7 @@ module RubyLLM
           status: status.to_s,
           operation_id: operation_id,
           final_url: final_url,
-          captured_at: captured_at&.utc&.iso8601,
+          captured_at: captured_at&.getutc&.iso8601,
           locator: locator,
           digest: digest,
           truncated: @truncated,

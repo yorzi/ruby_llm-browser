@@ -1,89 +1,108 @@
-# Security model (detailed)
+# Security model
 
-This document complements [`../SECURITY.md`](../SECURITY.md). It describes the boundaries
-the Gem enforces, the boundaries it explicitly cannot enforce, and how each maps to tests.
+Understand what the gem enforces and what a deployment must prove independently.
 
-## Trust model
+After reading this guide, you will know:
 
-| Source | Trust |
-| --- | --- |
-| Host application (actor, run, grants, budgets, consent) | trusted |
-| Backend/provider configuration (explicit, host-supplied) | trusted |
-| Model arguments | untrusted input, validated |
-| Page content and model output | untrusted data, never instructions or proof |
+- Which inputs are trusted.
+- Why local URL validation does not secure a remote browser.
+- How sessions, cancellation, unknown outcomes, and secrets are handled.
 
-Page text can never change policy, grant an action or elevate a tool's permissions. A
-successful extraction is evidence with provenance, not verification of a claim's truth.
+## Trust boundaries
 
-## Boundary 1 — destinations (SSRF)
+The host owns authentication, actor/run authorization, consent, provider configuration,
+source grants, budgets and approval issuance. The model, browser page and provider
+payload are untrusted. A `Context` expresses a host decision; it does not authenticate
+that decision. Unscoped store APIs are for trusted workers, not public controllers.
 
-`Policy#authorize_destination!` normalizes a URL and denies anything that is not an
-explicitly allowed host over an allowed scheme/port. Denials cover userinfo, unsupported
-schemes, non-approved ports, ambiguous IP encodings (decimal/octal/hex), loopback,
-private, link-local, multicast and cloud-metadata addresses in IPv4, IPv6 and
-IPv4-mapped forms, and hostnames whose DNS answers include any such address.
+## Destinations and egress
 
-This raises the barrier against `localhost`, private-network and metadata SSRF and against
-simple DNS rebinding, **but it runs in the Ruby process.** It cannot control what a
-remote browser does. Therefore:
+URL validation rejects unsupported schemes/ports, userinfo, ambiguous numeric IP forms,
+unapproved hosts, and local/private/link-local/metadata/reserved IP answers, including
+IPv6 and IPv4-mapped addresses. Real DNS validation is enabled by default.
 
-## Boundary 2 — egress (fail closed)
+These checks run in Ruby. They do **not** enforce a remote browser's DNS view, redirects,
+iframes, popups, WebSockets, subresources, scripts or connection-time rebinding.
+`Policy#authorize_egress!` refuses an unverified backend before starting a session.
+`egress_isolation: :enforced` records a **host assertion**, not independent proof and
+not installed firewall enforcement.
 
-Before any session starts, `Policy#egress_qualified?` must be satisfied. A backend
-advertises its posture through `Backend#capabilities`. If a backend cannot claim enforced
-egress isolation — every navigation, redirect hop, iframe, popup, subresource and
-WebSocket connection staying within approved destinations and public address ranges at
-connection time — the Gem raises `UNSUPPORTED_SECURITY_CAPABILITY` and never contacts the
-provider. A Ruby allowlist is never presented as a remote SSRF guarantee.
+Before a host makes that assertion, it must test every request path against a controlled
+public test origin and prove private/metadata addresses remain unreachable at connection
+time. Asset origins must be explicitly approved by the network layer. Also qualify
+local-mode browsers; a local browser is not a sandbox by default.
 
-The fake backend declares enforced isolation because it performs no network I/O. The
-Stagehand backend reports `:unverified` unless the host asserts `egress_isolated: true`
-after qualifying the provider itself.
+Stagehand navigation results may be null. The adapter refuses to invent a final URL in
+that case. A live deployment must establish how its actual server reports a verified
+current URL; the SDK schema alone is not evidence. Returned page data remains untrusted.
 
-## Boundary 3 — operations, sessions and money
+## Operation identity and recovery
 
-- An operation ID, actor/run binding, concurrency slot and budget are reserved
-  **before** the first remote call. Duplicate jobs attach to the stored operation.
-- Session creation, navigation, `act` and `end_` are issued with `max_retries: 0`. The
-  SDK's default of two retries is never used on effectful paths, and Active Job retries
-  are fenced by operation identity so they cannot spawn a second session.
-- The provider's session ID is persisted before any further call. An unresolved start or
-  action becomes `unknown`; an attempt at cleanup that did not succeed becomes
-  `cleanup_pending`. Neither is reported as `closed`, and the budget reservation is held
-  until closure or expiry is confirmed.
-- Cancellation marks the operation, fences stale workers and stops new calls. It cannot
-  undo an already-dispatched remote request.
+- Reserve operation identity and actor quota before start. Claim reserved-to-starting
+  atomically, checking the exact fence. A duplicate job cannot start a second session.
+- Rails idempotency keys bind the exact payload and budget. Per-actor write-lock rows
+  serialize even the first two reservations when there are no open operation rows.
+- Persist returned session identity before further calls, including a return that races
+  with cancellation. A persistence exception still triggers a cleanup attempt.
+- Disable SDK retries at client and request levels. The SDK's idempotency option is not
+  treated as a provider guarantee: its client has no configured idempotency header.
+- Cancellation cannot undo a dispatched request. It fences stale workers and holds quota
+  in `cleanup_pending` until provider-confirmed closure. A never-started reservation can
+  become terminal immediately.
+- A reaper fences before reconciliation/cleanup. It attempts to close known session IDs
+  even if reconciliation is unavailable. Database/provider failures never count as
+  successful cleanup. A local deadline or idle TTL is not proof of provider expiry.
+- A start whose session ID is unknown cannot be automatically reconciled by the current
+  Stagehand adapter. Hold quota and escalate to host/provider review. Never start a new
+  operation merely to conceal or retry an uncertain outcome.
 
-## Boundary 4 — approval (Act)
+SQLite concurrency is tested with independent connections. PostgreSQL remains untested
+in this audit. A global reaper must use the same backend configuration as the operations
+it sees; multi-backend routing is not represented in the schema.
 
-`RubyLLM::Browser::Act` is never registered by default. The RubyLLM `requires_approval`
-resolver only *reads* the host `ApprovalStore` (it may be called repeatedly). The atomic
-`consume_once`, together with the URL / page-revision / action-digest checks, happens
-inside `execute` immediately before dispatch. An approval binds actor, run, URL, page
-revision, exact normalized action digest and expiry. Missing, expired, revoked,
-cross-actor, replayed or stale approvals dispatch nothing. A provider timeout **after**
-dispatch is `unknown` and requires a new explicit decision; it is never replayed.
+## Actions and approvals
 
-## Boundary 5 — secrets and privacy
+**Live Act is disabled at the Engine boundary**, including when a backend advertises
+action support. Offline simulation checks RubyLLM approval integration, read-only grant
+resolution, atomic single-use consumption, actor/run/action/URL and supplied revision
+bindings, expiration, revocation, replay, and unknown dispatch outcomes.
 
-- API keys, cookies, `cdp_url` and raw page dumps never appear in tool results, model
-  messages, logs or errors. `sessions.start` returns a full-control DevTools URL; the
-  Gem treats it as a secret and drops it at the adapter boundary.
-- All Stagehand client arguments are passed explicitly. The Gem never reads SDK
-  credential/base-URL environment defaults, and because the SDK always merges
-  `STAGEHAND_CUSTOM_HEADERS`, the backend refuses to start unless the host approved those
-  headers.
-- Data sent to a remote browser/model is disclosed to the host so it can obtain consent.
+That is not the complete production protocol: operation/session/page bindings are
+optional on the current Approval object; a candidate-action hash is not a DOM/target
+revision; and each Engine call starts a new session. Implement and verify same-session
+host approval and fresh target/policy checks before enabling live Act.
 
-## What this Gem does not do
+Keyword filters on selectors/descriptions cannot prove semantic safety. An innocuously
+named button can purchase or publish. They are only defense in depth. Purchases,
+posting, account changes, credentials and access-control bypass remain unsupported.
 
-No authenticated-cookie reuse, no credential scraping, no CAPTCHA/age/access bypass, no
-arbitrary JS/shell, no automatic purchases, posting or account changes, no hidden paid
-fallback, and no second browser engine.
+## Output, schema, and secret handling
 
-## Evidence and honest limits
+Extraction data is validated against the host schema before redaction/truncation. Model
+byte requests cannot increase policy ceilings. The retained serialized JSON fits both
+the policy ceiling and remaining operation bytes, including UTF-8 and escaped text.
+These limits do not cap remote browser bandwidth or provider response allocation.
 
-`spec/security` exercises every denial path above against the fake backend and injected
-clients. Those tests prove the Gem's decision logic. They do **not** prove any provider's
-network isolation, TTL enforcement or billing ceiling. Live qualification is a separate,
-owner-authorized step, and until it exists live mode stays disabled.
+The redactor removes credential-like fields, known credential literals and WebSocket
+DevTools endpoints. URL provenance removes userinfo, fragments and credential-like
+query values. Error messages do not include raw SDK bodies or parser input. Progress
+messages contain no raw URL/selector. Active Job argument logging is disabled.
+
+This is **not a general secret or PII detector**. Arbitrary page secrets, screenshots,
+credentials under innocuous names and secrets not supplied to the redactor cannot be
+reliably identified. Do not browse authenticated/private content; do not put credentials
+in URLs or instructions; prevent host/RubyLLM/HTTP debug logging from recording payloads.
+Queue data and approval action arguments may persist in the host database; encrypt,
+scope and retain them appropriately. No browser cookies/profiles are supplied for reuse.
+
+The adapter passes explicit SDK credentials/base URL and rejects unapproved custom
+headers. Changes to relevant process environment values invalidate qualification.
+Environment injection is for diagnostics/tests; the real SDK reads actual process ENV.
+Do not mutate ENV during concurrent browser work. Session requests disable self-healing,
+CAPTCHA solving and provider recording/logging; actual provider behavior still needs
+qualification. Cleanup and TTL are best-effort, and cost values are advisory.
+
+## Next steps
+
+- Follow [Rails recovery](RAILS.md) to schedule cleanup and protect status access.
+- Review [the release audit](RELEASE_AUDIT.md) for evidence and remaining blockers.

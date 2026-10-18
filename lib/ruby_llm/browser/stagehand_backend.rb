@@ -29,7 +29,7 @@ module RubyLLM
       PINNED_VERSION_ENV = "STAGEHAND_SERVER_VERSION"
       ENV_OVERRIDE_KEYS = %w[STAGEHAND_API_URL STAGEHAND_BASE_URL].freeze
 
-      attr_reader :model_name, :server, :base_url, :capabilities
+      attr_reader :model_name, :server, :base_url
 
       # @param browserbase_api_key [String] the Browserbase key
       # @param model_api_key [String] the model provider key
@@ -47,7 +47,7 @@ module RubyLLM
       # @param client [Object, nil] an already-built client (tests/advanced hosts)
       def initialize(browserbase_api_key:, model_api_key:, model_name:,
                      server: :remote, base_url: nil, timeout: 60.0,
-                     egress_isolation: :unverified, act_supported: true,
+                     egress_isolation: :unverified, act_supported: false,
                      custom_headers_approved: false, env: ENV, client: nil)
         super()
         @browserbase_api_key = presence!(browserbase_api_key, :browserbase_api_key)
@@ -57,7 +57,9 @@ module RubyLLM
         @base_url = base_url.nil? ? default_base_url : presence!(base_url, :base_url)
         @timeout = positive_number!(timeout, :timeout)
         @env = env
-        @custom_headers_present = !env[CUSTOM_HEADERS_ENV].to_s.empty?
+        @environment_snapshot = relevant_environment(env)
+        @process_environment_snapshot = relevant_environment(ENV)
+        @custom_headers_present = !env[CUSTOM_HEADERS_ENV].to_s.empty? || !ENV[CUSTOM_HEADERS_ENV].to_s.empty?
         @custom_headers_approved = !!custom_headers_approved
         @local_binary_pinned = local? && pinned_binary?
         @client_mutex = Mutex.new
@@ -76,53 +78,80 @@ module RubyLLM
       # or provider payload that reaches a result.
       def secrets = [ @browserbase_api_key, @model_api_key ]
 
+      def capabilities
+        return @capabilities if environment_unchanged?
+
+        Capabilities.new(server_mode: local? ? :local : :remote, egress_isolation: :unverified,
+                         custom_headers_present: true, custom_headers_approved: false)
+      end
+
       def local? = server == "local"
 
       def start(context:, operation:, now:)
+        ensure_qualified!
         response = effectful do
-          client.sessions.start(model_name: model_name, request_options: effectful_options(operation))
+          client.sessions.start(model_name: model_name, self_heal: false, verbose: 0,
+                                wait_for_captcha_solves: false,
+                                browserbase_session_create_params: {
+                                  keep_alive: false, timeout: operation.budget.max_seconds.ceil,
+                                  browser_settings: { solve_captchas: false, record_session: false, log_session: false }
+                                },
+                                request_options: effectful_options(operation, now: now))
         end
         session_id = response.data&.session_id.to_s
-        raise ProviderError, "browser provider did not return a session id" if session_id.empty?
+        unless response.success == true && !session_id.empty?
+          partial = Session.new(id: session_id, started_at: now) unless session_id.empty?
+          raise SessionUnknown.new("browser provider did not confirm a session identity", session: partial)
+        end
 
         Session.new(id: session_id, url: nil, started_at: now)
       end
 
       def navigate(session, url:, operation:, now:)
         response = effectful do
-          client.sessions.navigate(session.id, url: url, request_options: effectful_options(operation))
+          client.sessions.navigate(session.id, url: url, request_options: effectful_options(operation, now: now))
         end
-        Session.new(id: session.id, url: final_url(response) || url, started_at: session.started_at)
+        raise SessionUnknown, "browser navigation outcome is unconfirmed" unless response.success == true
+
+        destination = final_url(response)
+        unless destination.is_a?(String) && !destination.empty?
+          raise SessionUnknown, "browser provider did not verify the final destination URL"
+        end
+        Session.new(id: session.id, url: destination, started_at: session.started_at)
       end
 
       def observe(session, instruction:, operation:, now:)
         response = read do
           client.sessions.observe(session.id, instruction: instruction,
-                                             request_options: read_options(operation))
+                                             request_options: read_options(operation, now: now))
         end
+        raise ProviderError, "browser observation was unsuccessful" unless response.success == true
         Array(response.data&.result).map { |action| observed_action(action) }
       end
 
       def extract(session, schema:, instruction:, operation:, now:)
         response = read do
           client.sessions.extract(session.id, schema: schema, instruction: instruction,
-                                             request_options: read_options(operation))
+                                             request_options: read_options(operation, now: now))
         end
+        raise ProviderError, "browser extraction was unsuccessful" unless response.success == true
         dump(response.data&.result)
       end
 
       def act(session, action:, operation:, now:)
+        raise UnsupportedSecurityCapability, "backend Act is disabled" unless capabilities.act_supported?
         response = effectful do
           client.sessions.act(session.id, input: action_input(action),
-                                         request_options: effectful_options(operation))
+                                         request_options: effectful_options(operation, now: now))
         end
+        raise SessionUnknown, "browser action outcome is unconfirmed" unless response.success == true
         dump(response.data&.result)
       end
 
       # Returns true only when the provider confirms closure. Any unconfirmed or failed
       # outcome returns false so the operation stays `cleanup_pending`.
       def end_session(session, operation:, now:)
-        response = client.sessions.end_(session.id, request_options: effectful_options(operation))
+        response = client.sessions.end_(session.id, request_options: { max_retries: 0, timeout: @timeout })
         response.success == true
       rescue Stagehand::Errors::Error
         false
@@ -135,7 +164,7 @@ module RubyLLM
       end
 
       def inspect
-        "#<#{self.class} server=#{server} base_url=#{base_url} model=#{model_name}>"
+        "#<#{self.class} server=#{server}>"
       end
 
       private
@@ -149,6 +178,10 @@ module RubyLLM
       end
 
       def build_client
+        raise UnsupportedSecurityCapability, "Stagehand environment changed; rebuild the backend" unless environment_unchanged?
+        if local? && ENV[PINNED_BINARY_ENV].to_s.empty? && ENV[PINNED_VERSION_ENV].to_s.empty?
+          raise UnsupportedSecurityCapability, "local mode requires a process-level server pin"
+        end
         require "stagehand"
         Stagehand::Client.new(
           browserbase_api_key: @browserbase_api_key,
@@ -165,33 +198,40 @@ module RubyLLM
       def effectful
         yield
       rescue Stagehand::Errors::APIConnectionError
-        raise SessionUnknown, "browser provider connection outcome is unconfirmed"
+        raise SessionUnknown, "browser provider connection outcome is unconfirmed", cause: nil
       rescue Stagehand::Errors::APIStatusError => e
-        raise translate_status(e)
+        raise translate_status(e), cause: nil
       rescue Stagehand::Errors::Error => e
-        raise ProviderError, "browser provider error: #{e.class.name.split("::").last}"
+        raise SessionUnknown, "browser provider outcome is unconfirmed: #{e.class.name.split("::").last}", cause: nil
       end
 
       # Read-only calls never retry; an ambiguous failure is a plain provider error.
       def read
         yield
       rescue Stagehand::Errors::Error => e
-        raise ProviderError, "browser provider error: #{e.class.name.split("::").last}"
+        raise ProviderError, "browser provider error: #{e.class.name.split("::").last}", cause: nil
       end
 
       def translate_status(error)
         status = error.status.to_i
-        return SessionUnknown.new("browser provider returned #{status}; outcome unconfirmed") if status >= 500
+        if status >= 500 || status == 408
+          return SessionUnknown.new("browser provider returned #{status}; outcome unconfirmed")
+        end
 
         ProviderError.new("browser provider rejected the request (status #{status})")
       end
 
-      def effectful_options(operation)
-        { max_retries: 0, idempotency_key: operation.id }
+      def effectful_options(operation, now:)
+        # The SDK has no configured idempotency header. The durable store, not an
+        # ignored request option, prevents duplicate starts and actions.
+        read_options(operation, now: now)
       end
 
-      def read_options(_operation)
-        { max_retries: 0 }
+      def read_options(operation, now:)
+        remaining = operation.budget.max_seconds - operation.elapsed_seconds(now)
+        raise BudgetExhausted, "operation wall-clock budget exhausted" unless remaining.positive?
+
+        { max_retries: 0, timeout: [ @timeout, remaining ].min }
       end
 
       def action_input(action)
@@ -250,11 +290,13 @@ module RubyLLM
       def presence!(value, name)
         raise InvalidInput, "#{name} must be a non-empty String" unless value.is_a?(String) && !value.empty?
 
-        value
+        value.dup.freeze
       end
 
       def positive_number!(value, name)
-        raise InvalidInput, "#{name} must be a positive number" unless value.is_a?(Numeric) && value.positive?
+        unless value.is_a?(Numeric) && value.finite? && value.positive?
+          raise InvalidInput, "#{name} must be a positive finite number"
+        end
 
         value
       end
@@ -264,6 +306,26 @@ module RubyLLM
         return mode if %w[remote local].include?(mode)
 
         raise InvalidInput, "server must be :remote or :local"
+      end
+
+      def relevant_environment(env)
+        Immutable.copy([ CUSTOM_HEADERS_ENV, PINNED_BINARY_ENV, PINNED_VERSION_ENV ].to_h { |key| [ key, env[key] ] })
+      end
+
+      def environment_unchanged?
+        relevant_environment(@env) == @environment_snapshot &&
+          relevant_environment(ENV) == @process_environment_snapshot
+      end
+
+      def ensure_qualified!
+        current = capabilities
+        unless current.enforced_egress? && (!current.local_mode? || current.local_binary_pinned?) &&
+            (!current.custom_headers_present? || current.custom_headers_approved?)
+          raise UnsupportedSecurityCapability, "Stagehand backend is not egress-qualified"
+        end
+        if !ENV[CUSTOM_HEADERS_ENV].to_s.empty? && !@custom_headers_approved
+          raise UnsupportedSecurityCapability, "Stagehand process custom headers are not approved"
+        end
       end
     end
   end

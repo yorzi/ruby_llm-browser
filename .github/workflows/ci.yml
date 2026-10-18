@@ -10,14 +10,22 @@ permissions:
 
 jobs:
   test:
-    name: Ruby ${{ matrix.ruby }}
+    name: Ruby ${{ matrix.ruby }} / RubyLLM ${{ matrix.ruby_llm }} / Rails ${{ matrix.rails }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         ruby: ["3.2", "3.3", "3.4"]
+        ruby_llm: ["2.0.0", "2.1.1"]
+        rails: ["~> 8.1.0"]
+        include:
+          - ruby: "3.2"
+            ruby_llm: "2.0.0"
+            rails: "~> 8.0.0"
     env:
       BUNDLE_GEMFILE: Gemfile
+      RUBY_LLM_VERSION: ${{ matrix.ruby_llm }}
+      RAILS_VERSION: ${{ matrix.rails }}
       # CI is offline by default: no provider credentials are configured and no live
       # browser session may be opened.
     steps:
@@ -34,6 +42,11 @@ jobs:
       - name: Run RuboCop
         run: bundle exec rubocop --parallel
 
+      - name: Run offline examples
+        run: |
+          bundle exec ruby examples/plain_ruby.rb
+          bundle exec ruby examples/rails_adapter.rb
+
   build:
     name: Build gem
     runs-on: ubuntu-latest
@@ -44,4 +57,8 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
       - name: Build
-        run: gem build ruby_llm-browser.gemspec
+        run: bundle exec rake build
+      - name: Check known dependency advisories
+        run: bundle exec bundle-audit check --update
+      - name: Install and verify the actual package and activated runtime gems
+        run: bundle exec ruby bin/verify-package --rails --audit

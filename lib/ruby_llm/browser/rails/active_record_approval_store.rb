@@ -5,7 +5,7 @@ module RubyLLM
     module Rails
       # Durable {RubyLLM::Browser::ApprovalStore} backed by ActiveRecord.
       #
-      # {#consume_once} runs inside a row-locked transaction and performs every check —
+      # {#consume_once} performs every check and uses a conditional database update:
       # existence, active, actor/run, URL, page revision, operation/session and exact
       # action digest — before it marks the row consumed. Two workers cannot both consume
       # the same grant, and a replayed or cross-actor approval is refused.
@@ -37,8 +37,8 @@ module RubyLLM
 
         def consume_once(id, actor_id:, run_id:, url:, action_digest:, now:, page_revision: nil,
                          operation_id: nil, session_id: nil)
-          @record_class.transaction do
-            record = locked!(id)
+          record = @record_class.find_by(id: id)
+          raise ApprovalRequired, "no approval was issued" unless record
             approval = record.to_approval
             raise ApprovalStale, "approval #{id} was already consumed" if approval.consumed?
             raise ApprovalStale, "approval #{id} was revoked" if approval.revoked?
@@ -52,26 +52,19 @@ module RubyLLM
             end
 
             consumed = approval.consume!(now: now)
-            record.update!(consumed_at: consumed.consumed_at, updated_at: now)
+            changed = @record_class.where(id: id, consumed_at: nil, revoked: false)
+                                   .where("expires_at > ?", now)
+                                   .update_all(consumed_at: now, updated_at: now)
+            raise ApprovalStale, "approval is no longer active" unless changed == 1
+
             consumed
-          end
         end
 
         def revoke(id)
-          @record_class.transaction do
-            record = locked!(id)
-            return record.to_approval if record.revoked
+          changed = @record_class.where(id: id).update_all(revoked: true, updated_at: Time.now.utc)
+          raise ApprovalRequired, "no approval was issued" if changed.zero?
 
-            record.update!(revoked: true, updated_at: Time.now.utc)
-            record.to_approval
-          end
-        end
-
-        private
-
-        def locked!(id)
-          @record_class.lock.find_by(id: id) ||
-            raise(ApprovalRequired, "no approval #{id.inspect} was issued")
+          fetch(id)
         end
       end
     end

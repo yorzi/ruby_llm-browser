@@ -26,10 +26,12 @@ module RubyLLM
                             description: "Optional tighter byte ceiling for the returned observation; the host policy also caps this"
 
       def execute(url:, instruction: nil, max_bytes: nil)
-        report("Inspecting #{url}")
+        report("Inspecting an approved page")
         engine.inspect(url: url, instruction: instruction, max_bytes: max_bytes).to_h
       rescue Error => e
         failure(e)
+      rescue StandardError
+        unexpected_failure
       end
     end
   end

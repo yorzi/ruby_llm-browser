@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "json_schemer"
 
 module RubyLLM
   module Browser
@@ -44,7 +45,7 @@ module RubyLLM
 
       def initialize(allowed_hosts:, allowed_schemes: UrlGuard::DEFAULT_SCHEMES,
                      allowed_ports: UrlGuard::DEFAULT_PORTS, verify_dns: true, resolver: nil,
-                     max_result_bytes: Configuration::DEFAULT_MAX_RESULT_BYTES,
+                     max_result_bytes: nil,
                      allowed_action_methods: DEFAULT_ACTION_METHODS,
                      forbidden_action_patterns: DEFAULT_FORBIDDEN_ACTIONS,
                      max_schema_depth: DEFAULT_MAX_SCHEMA_DEPTH,
@@ -57,13 +58,13 @@ module RubyLLM
         @allowed_hosts = @url_guard.allowed_hosts
         @allowed_schemes = @url_guard.allowed_schemes
         @allowed_ports = @url_guard.allowed_ports
-        @max_result_bytes = positive_integer!(max_result_bytes, :max_result_bytes)
-        @allowed_action_methods = normalize_action_methods!(allowed_action_methods)
-        @forbidden_action_patterns = Array(forbidden_action_patterns).map do |pattern|
+        @max_result_bytes = positive_integer!(max_result_bytes || RubyLLM::Browser.configuration.max_result_bytes, :max_result_bytes)
+        @allowed_action_methods = Immutable.copy(normalize_action_methods!(allowed_action_methods))
+        @forbidden_action_patterns = (DEFAULT_FORBIDDEN_ACTIONS + Array(forbidden_action_patterns)).uniq.map do |pattern|
           raise InvalidInput, "forbidden actions must be regexps" unless pattern.is_a?(Regexp)
 
           pattern
-        end
+        end.freeze
         @max_schema_depth = positive_integer!(max_schema_depth, :max_schema_depth)
         @max_schema_properties = positive_integer!(max_schema_properties, :max_schema_properties)
         @max_schema_bytes = positive_integer!(max_schema_bytes, :max_schema_bytes)
@@ -85,24 +86,37 @@ module RubyLLM
       # @return [Hash] the schema (JSON string keys)
       def authorize_schema!(schema)
         schema = coerce_schema!(schema)
+        raise InvalidInput, "extraction schema must be an object schema" unless schema.is_a?(Hash)
         json = Redactor.canonical_json(schema)
         raise InvalidInput, "extraction schema is too large" if json.bytesize > max_schema_bytes
         raise InvalidInput, "extraction schema must be an object schema" unless schema["type"] == "object"
 
+        validate_schema_node!(schema, depth: 1)
+        unless JSONSchemer.valid_schema?(schema)
+          raise InvalidInput, "extraction schema is malformed"
+        end
         properties = schema["properties"] || {}
         if properties.size > max_schema_properties
           raise InvalidInput, "extraction schema has too many properties"
         end
 
-        validate_schema_node!(schema, depth: 1)
-        schema
+        Immutable.copy(schema)
+      rescue JSON::GeneratorError, JSON::NestingError, SystemStackError
+        raise InvalidInput, "extraction schema is not bounded JSON"
+      end
+
+      # Rejects provider data that does not satisfy the host's JSON Schema.
+      def authorize_extraction!(data, schema:)
+        raise ProviderError, "browser extraction did not match the host schema" unless JSONSchemer.schema(schema).valid?(data)
+
+        data
       end
 
       # Redacts and bounds arbitrary extraction/observation data.
       #
       # @return [Array(Object, Boolean)] bounded data and truncation flag
       def authorize_result!(data, max_bytes: nil, secrets: [])
-        Redactor.bound(data, max_bytes: max_bytes || max_result_bytes, secrets: secrets)
+        Redactor.bound(data, max_bytes: [ max_bytes || max_result_bytes, max_result_bytes ].min, secrets: secrets)
       end
 
       # Validates one observed/approved action hash.
@@ -210,8 +224,8 @@ module RubyLLM
         raise InvalidInput, "extraction schema must be a JSON object" unless parsed.is_a?(Hash)
 
         stringify_keys(parsed)
-      rescue JSON::ParserError => e
-        raise InvalidInput, "extraction schema is not valid JSON: #{e.message}"
+      rescue JSON::ParserError
+        raise InvalidInput, "extraction schema is not valid JSON", cause: nil
       end
 
       def validate_schema_node!(node, depth:)
@@ -234,7 +248,7 @@ module RubyLLM
             if name == "properties"
               # Values are schemas; property names themselves are arbitrary.
               value.each_value { |subschema| validate_schema_node!(subschema, depth: depth + 1) } if value.is_a?(Hash)
-            else
+            elsif name == "items" || name == "additionalProperties"
               validate_schema_node!(value, depth: depth + 1)
             end
           end
@@ -267,6 +281,9 @@ module RubyLLM
       def normalize_action_methods!(methods)
         normalized = Array(methods).map { |method| method.to_s.downcase }
         raise InvalidInput, "allowed_action_methods must not be empty" if normalized.empty?
+        unless (normalized - DEFAULT_ACTION_METHODS).empty?
+          raise InvalidInput, "only supported non-script action methods are allowed"
+        end
 
         normalized.uniq
       end

@@ -10,7 +10,7 @@ RSpec.describe RubyLLM::Browser::Doctor do
 
   it "passes for a qualified fake backend with no environment overrides" do
     expect(report[:ok]).to be(true)
-    expect(report[:summary]).to eq("ready for a qualified live session")
+    expect(report[:summary]).to eq("configuration checks passed; live provider guarantees are not verified")
     names = report[:checks].map { |check| check[:name] }
     expect(names).to include(:ruby_llm, :stagehand, :egress_isolation)
   end

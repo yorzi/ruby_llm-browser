@@ -6,5 +6,6 @@
 /vendor/bundle/
 *.gem
 Gemfile.lock
+*.gemfile.lock
 .rspec_status
 .DS_Store

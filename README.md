@@ -1,172 +1,134 @@
 # ruby_llm-browser
 
-**Unofficial community extension for [RubyLLM](https://rubyllm.com).**
-Policy-bound browser `Inspect` and `Extract` tools for RubyLLM agents, backed by the
-official [Stagehand Ruby SDK](https://github.com/browserbase/stagehand-ruby), with an
-opt-in human-approved `Act` tool and an optional Rails 8 / Active Job adapter.
+An **unofficial community extension** for [RubyLLM](https://rubyllm.com), built on the
+official [Stagehand Ruby SDK](https://github.com/browserbase/stagehand-ruby).
+It provides read-only `Inspect` and schema-pinned `Extract` tools, operation bookkeeping,
+and an optional Rails 8 adapter. It does not implement a browser engine.
 
-> This is **not** an official RubyLLM project. The `RubyLLM` namespace is used to match
-> community convention (`ruby_llm-<feature>`); it does not imply RubyLLM core ownership,
-> endorsement or trademark rights. Names, licenses and live-browser guarantees are not
-> claimed until verified — see [Status](#status).
+> **Pre-release, not approved for publication or production use.** Offline tests pass,
+> but browser-side egress, live-provider behavior, and the full session-bound Act
+> approval protocol are not qualified. See the [release audit](docs/RELEASE_AUDIT.md).
+> This project is not maintained or endorsed by RubyLLM or Browserbase.
 
-## Why
+## Install from this checkout
 
-RubyLLM already gives you the Tool protocol and the chat loop. Stagehand's Ruby SDK
-already gives you typed browser sessions. What is missing is the reusable, easy-to-get-
-wrong layer between them:
-
-- composable **source and egress policy** (allowlists, SSRF/redirect/DNS-rebinding
-  defense, fail-closed when a backend cannot enforce egress),
-- **bounded, sanitized, attributed results** instead of raw page dumps,
-- **durable operation and session lifecycle** (`reserved → starting → active → closing
-  → closed`, plus `unknown` / `cleanup_pending`) that survives worker retries and death,
-- **budgets, cancellation and cleanup**,
-- **per-action human approval** bound to the exact page and action,
-- optional **Rails 8 Active Job** integration.
-
-It deliberately does **not** reimplement a browser engine, port Browser Use, or expose a
-generic autonomous side-effect tool.
-
-## Install
+The gem has not been published to RubyGems. For development:
 
 ```ruby
-# Gemfile
-gem "ruby_llm-browser"
+# Your application's Gemfile
+gem "ruby_llm-browser", path: "/path/to/ruby_llm-browser"
 ```
 
+The core requires Ruby 3.2+, RubyLLM `>= 2.0, < 3`, `json_schemer ~> 2.5`, and
+`stagehand ~> 3.21.0`, plus patched DNS/URL/CGI/compression gems (see the
+[dependency reference](docs/API.md)). Requiring `ruby_llm/browser` loads neither Rails nor the Stagehand
+client, discovers no provider credentials, and opens no browser session.
+
+## Try it offline
+
+This complete example makes no network request and requires no API key:
+
 ```ruby
-require "ruby_llm"
+# smoke-test: offline
 require "ruby_llm/browser"
-```
 
-The Gem core is plain Ruby. Requiring it does not load Rails, read SDK credentials or
-open any session.
-
-## Usage (illustrative)
-
-The host application — not the model and not page text — supplies identity, consent,
-source policy and the backend.
-
-```ruby
-policy = RubyLLM::Browser::Policy.new(
-  allowed_hosts: ["docs.example.com", "*.example.org"]
-)
+# Fake DNS is only for this offline demonstration. Production uses real DNS.
+class OfflineResolver
+  def getaddresses(_host) = [ "93.184.216.34" ]
+end
 
 context = RubyLLM::Browser::Context.new(
-  actor_id: current_user.id,
-  run_id: research_run.id,
-  source_policy: policy,
-  backend: RubyLLM::Browser::StagehandBackend.new(
-    browserbase_api_key: ENV.fetch("BROWSERBASE_API_KEY"),
-    model_api_key: ENV.fetch("MODEL_API_KEY"),
-    model_name: "gpt-4.1-mini",
-    egress_isolated: true # only after you qualified the provider's isolation
+  actor_id: "demo-actor", run_id: "demo-run",
+  backend: RubyLLM::Browser::FakeBackend.new,
+  source_policy: RubyLLM::Browser::Policy.new(
+    allowed_hosts: [ "docs.example.com" ], resolver: OfflineResolver.new
   ),
-  operation_store: RubyLLM::Browser::InMemoryOperationStore.new, # durable store in production
-  budget: RubyLLM::Browser::Budget.new(max_seconds: 60, max_steps: 12)
+  operation_store: RubyLLM::Browser::InMemoryOperationStore.new
 )
+schema = {
+  "type" => "object",
+  "properties" => { "title" => { "type" => "string" } },
+  "required" => [ "title" ], "additionalProperties" => false
+}
 
-chat = RubyLLM.chat.with_tools(
-  RubyLLM::Browser::Inspect.new(context: context),
-  RubyLLM::Browser::Extract.new(context: context)
-  # Never register RubyLLM::Browser::Act by default.
-)
+inspect_tool = RubyLLM::Browser::Inspect.new(context: context)
+extract_tool = RubyLLM::Browser::Extract.new(context: context, schema: schema)
+puts inspect_tool.execute(url: "https://docs.example.com/")[:status] # => ok
+puts extract_tool.execute(url: "https://docs.example.com/")[:data]   # => {"title"=>"Example"}
 ```
 
-Every tool returns a bounded `RubyLLM::Browser::Result` with `status`, `final_url`,
-`captured_at`, a content `digest`/`locator`, a truncation flag and a typed `error_code`.
-Page text is untrusted evidence, never instructions, and a successful result never
-verifies the truth of extracted claims.
+Register these instances on your configured RubyLLM chat with
+`chat.with_tools(inspect_tool, extract_tool)`. Never register `Act` by default.
+The host supplies authenticated **string** actor/run IDs, authorization, consent,
+the pinned extraction schema, budgets, and the qualified backend.
 
-## Rails adapter (optional)
+The tools return a **Hash**, not a `Result` object. Direct `Engine` calls return a
+`Result`. Check `status` and `error`; page data is untrusted evidence, not verified truth.
 
-The Gem core stays Rails-free. In a Rails 8 app, load the adapter in an initializer:
+## Safety boundaries
+
+- URL policy checks hosts, schemes, ports, and public DNS/IP addresses. It cannot
+  sandbox a remote browser or control page-triggered requests.
+- A live backend is refused unless its host asserts qualified browser-side egress.
+  `egress_isolation: :enforced` is an assertion, **not a switch that installs isolation**.
+- The model cannot increase the host's output limit. Results are redacted, schema-checked
+  for extraction, and bounded by the policy and remaining operation bytes.
+- A durable operation is claimed before start. Duplicate jobs cannot start it again.
+  SDK retries are disabled; uncertain outcomes are never automatically replayed.
+- Cancellation fences workers but cannot undo an in-flight request. Dispatched operations
+  retain quota until cleanup is confirmed. Run a reaper independently of job workers.
+- `max_cost_usd` is advisory metadata, not an enforced billing cap. Provider timeouts and
+  cleanup are also not a promise of zero future charges.
+- `Act` is simulation-only. The Engine refuses non-fake Act before session start.
+  Stagehand adapter Act support also defaults to **false**. Candidate-list
+  hashes and selector keyword filters are not proof of target identity or action safety.
+
+## Rails integration
+
+Add Rails 8's `activerecord` and `activejob` to your host application, then opt in:
 
 ```ruby
-# config/initializers/ruby_llm_browser.rb
 require "ruby_llm/browser/rails"
-
-RubyLLM::Browser::Rails.context_factory = lambda do |actor_id:, run_id:|
-  RubyLLM::Browser::Context.new(
-    actor_id: actor_id, run_id: run_id,
-    source_policy: policy, backend: qualified_backend,
-    operation_store: RubyLLM::Browser::Rails.operation_store,
-    approval_store: RubyLLM::Browser::Rails.approval_store
-  )
-end
 ```
 
 ```bash
-bin/rails generate ruby_llm:browser:install   # durable tables
-bundle exec rake db:migrate
+bin/rails generate ruby_llm:browser:install
+bin/rails db:migrate
 ```
 
-```ruby
-# Reserve (or attach to) one durable operation and run it in the background. A duplicate
-# delivery or a retried job attaches to the stored operation; it never starts a second
-# session.
-RubyLLM::Browser::Rails::OperationJob.enqueue(
-  actor_id: current_user.id, run_id: research_run.id, kind: :inspect,
-  url: "https://docs.example.com/", budget: RubyLLM::Browser::Budget.new,
-  idempotency_key: "research-#{research_run.id}"
-)
+The adapter provides durable operation/approval stores, actor-scoped jobs, cancellation,
+and a reaper. Follow the [Rails guide](docs/RAILS.md) for the context factory, matching
+budgets, status access, scheduling, and upgrading an earlier development database.
+Only SQLite concurrency is tested locally; PostgreSQL requires its own qualification.
 
-# Cancel, and reap orphaned/unknown sessions:
-RubyLLM::Browser::Rails.operation_store.cancel(
-  operation_id, actor_id: current_user.id, run_id: research_run.id, now: Time.now.utc
-)
-RubyLLM::Browser::Rails::Reaper.new(backend: qualified_backend).sweep
-```
+## Documentation
 
-See [`examples/`](examples) for runnable scripts (plain Ruby and Rails).
+- [Documentation index](docs/README.md)
+- [API, configuration, and result reference](docs/API.md)
+- [Rails jobs and recovery](docs/RAILS.md)
+- [Security model and live qualification](docs/SECURITY_MODEL.md)
+- [Compatibility and release checklist](docs/RELEASING.md)
+- [Audit findings and unresolved blockers](docs/RELEASE_AUDIT.md)
+- [Requirement evidence](docs/WORK.md)
+- [Offline scripts](examples/)
 
-## Status
-
-This Gem is under active development ahead of any public release. What follows is a
-deliberately honest split between "implemented and tested offline" and "not proven".
-
-| Area | State |
-| --- | --- |
-| Gem scaffold, Ruby-only fixture, CI | done |
-| Read-only `Inspect` / `Extract` core (fake backend) | done (offline) |
-| URL/SSRF policy and fail-closed egress gate | done (offline) |
-| Stagehand adapter, budgets, redaction, Doctor | done (offline; live provider not run) |
-| Durable operation/approval store (in-memory + ActiveRecord) | done |
-| Opt-in `Act` with one-use approvals | done (offline) |
-| Rails 8 Active Job, cancellation and cleanup reaper | done (offline, in-memory SQLite) |
-| Live provider smoke test | **not run** — requires explicit owner authorization |
-| Public RubyGems release | **blocked** pending name/license/security/compatibility clearance |
-
-Mocked or fake backends prove the Gem's API logic only. They never prove a provider's
-remote network egress isolation, TTL or billing limits. See
-[`docs/SPEC_BASELINE.md`](docs/SPEC_BASELINE.md) and
-[`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
-
-## Non-goals
-
-No browser engine, no Browser Use port, no arbitrary JS/shell tool, no CAPTCHA/age/access
-bypass, no credential or cookie scraping, no purchases, posting or account changes, no
-hidden paid fallback on load.
-
-## Compatibility targets (not yet proven)
-
-| Component | Target |
-| --- | --- |
-| Ruby | >= 3.2 |
-| RubyLLM | 2.0.0 and 2.1.x (tool core required) |
-| Stagehand | 3.21.0 (tag `v3.21.0`) |
-| Rails / Active Job | 8.x, optional |
+These documents and examples are included in the built gem.
 
 ## Development
 
 ```bash
 bin/setup
 bundle exec rake
+bundle exec bundle-audit check --update
+bundle exec ruby examples/plain_ruby.rb
+bundle exec ruby examples/rails_adapter.rb
+bundle exec rake build
+bundle exec ruby bin/verify-package --rails --audit
 ```
 
-Default CI uses fakes only. Live browser tests are opt-in and owner-authorized.
+Tests block unmocked network requests. No paid live call or RubyGems publication is part
+of the default workflow. See [contributing](CONTRIBUTING.md).
 
 ## License
 
-MIT — see [`LICENSE.txt`](LICENSE.txt) and [`NOTICE.md`](NOTICE.md) for upstream notices.
+MIT. See [LICENSE.txt](LICENSE.txt) and [third-party notices](NOTICE.md).

@@ -1,0 +1,5 @@
+# frozen_string_literal: true
+
+ENV["RUBY_LLM_VERSION"] = "2.0.0"
+ENV["RAILS_VERSION"] = "~> 8.0.0"
+eval_gemfile "../Gemfile"

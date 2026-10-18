@@ -54,6 +54,22 @@ module RubyLLM
         raise NotImplementedError, "OperationStore#update must be implemented"
       end
 
+      # Atomically changes reserved to starting, checking the caller's fence. A second
+      # delivery must never start even when it read the row before the first claim.
+      def claim_start(_operation, now:)
+        raise NotImplementedError, "OperationStore#claim_start must be implemented"
+      end
+
+      # Persists a returned session even if cancellation fenced its starting worker.
+      def record_session(_operation, session_id:, now:)
+        raise NotImplementedError, "OperationStore#record_session must be implemented"
+      end
+
+      # Records provider-confirmed closure of this exact session, including cancellation.
+      def confirm_closed(_operation, session_id:, now:)
+        raise NotImplementedError, "OperationStore#confirm_closed must be implemented"
+      end
+
       # Marks an operation unable to confirm its own cleanup.
       #
       # @return [Operation]
