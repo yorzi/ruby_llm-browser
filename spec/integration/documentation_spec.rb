@@ -23,10 +23,17 @@ RSpec.describe "documentation and package contents" do
   it "resolves local Markdown links inside the distributed package" do
     package.files.grep(/\.md$/).each do |file|
       File.read(File.join(root, file)).scan(/\[[^\]]*\]\(([^)]+)\)/).flatten.each do |link|
-        next if link.start_with?("#", "https://", "http://", "mailto:")
+        jekyll_target = link.match(/\A\{% link (.+?) %\}\z/)&.captures&.first
+        generated_site_url = link.match?(/\A\{\{.*\|\s*relative_url\s*\}\}\z/)
+        next if generated_site_url
+        next if !jekyll_target && link.start_with?("#", "https://", "http://", "mailto:")
 
-        target = URI::DEFAULT_PARSER.unescape(link.split("#").first)
-        relative = File.expand_path(target, File.dirname(File.join(root, file))).delete_prefix("#{root}/")
+        relative = if jekyll_target
+          File.join("docs", jekyll_target)
+        else
+          target = URI::DEFAULT_PARSER.unescape(link.split("#").first)
+          File.expand_path(target, File.dirname(File.join(root, file))).delete_prefix("#{root}/")
+        end
         present = package.files.include?(relative) || package.files.any? { |path| path.start_with?("#{relative.chomp("/")}/") }
         expect(present).to be(true), "#{file}: target not shipped: #{link}"
       end

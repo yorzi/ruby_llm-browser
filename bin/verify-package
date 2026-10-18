@@ -34,7 +34,9 @@ verification = lambda do
     loaded = $LOADED_FEATURES.grep(%r{/(?:active_record|active_job|railties)/|/stagehand/client\.rb})
     raise "core loaded framework or SDK client" unless loaded.empty?
     specification = Gem.loaded_specs.fetch("ruby_llm-browser")
-    raise "activated the checkout" unless specification.full_gem_path.start_with?(ENV.fetch("GEM_HOME"))
+    gem_home = File.realpath(ENV.fetch("GEM_HOME"))
+    gem_path = File.realpath(specification.full_gem_path)
+    raise "activated outside the isolated GEM_HOME" unless gem_path.start_with?("#{gem_home}#{File::SEPARATOR}")
     %w[docs/API.md docs/RAILS.md docs/RELEASE_AUDIT.md examples/plain_ruby.rb].each do |path|
       raise "missing #{path}" unless File.file?(File.join(specification.full_gem_path, path))
     end

@@ -27,7 +27,12 @@ Gem::Specification.new do |spec|
   spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files = Dir.glob("{lib,docs,examples}/**/*").select { |file| File.file?(file) } +
+  package_files = Dir.glob("{lib,docs,examples}/**/*").select { |file| File.file?(file) }
+  package_files.reject! do |file|
+    file.start_with?("docs/_site/", "docs/vendor/", "docs/.bundle/", "docs/.jekyll-cache/") ||
+      %w[docs/Gemfile docs/Gemfile.lock docs/_site.ruby-llm-browser-generated].include?(file)
+  end
+  spec.files = package_files +
                %w[README.md CHANGELOG.md LICENSE.txt NOTICE.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md]
   spec.require_paths = [ "lib" ]
 
