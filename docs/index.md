@@ -35,16 +35,14 @@ features:
 
 ## Before You Install
 
-This gem has not been published to RubyGems. Install the unreleased source from GitHub.
-A version such as `0.1.0` in the source tree is not a claim that a public release exists.
-The first release supports only the offline `FakeBackend`. The built-in Stagehand adapter
-is unsupported until provider egress and confirmed cleanup are qualified. Live Act is
-deferred to a later version.
+The first release is `0.1.0` and supports only the offline `FakeBackend`. The built-in
+Stagehand adapter is unsupported until provider egress and confirmed cleanup are
+qualified. The full live Act protocol is deferred to a later version.
 
 ## Install
 
 ```sh
-{% if site.docs_unreleased %}bundle add ruby_llm-browser --git https://github.com/yorzi/ruby_llm-browser --branch main{% else %}bundle add ruby_llm-browser --git https://github.com/yorzi/ruby_llm-browser --ref v{{ site.version }}{% endif %}
+{% if site.docs_unreleased %}bundle add ruby_llm-browser --git https://github.com/yorzi/ruby_llm-browser --branch main{% else %}bundle add ruby_llm-browser --version "~> {{ site.version }}"{% endif %}
 ```
 
 ## A First Look

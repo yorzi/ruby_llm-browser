@@ -20,9 +20,11 @@ separate specifications repository; this file records exactly which baseline was
 | H2 approval/content commit C | `678f9faed6dfdd8e55a7c54566f94cfa1ad1bc0a` |
 | Registration commit R | Pending; not registered |
 | Source commit date | 2026-10-18 |
-| Spec baseline version | `0.3.0-draft` |
+| Approved Specs candidate version at Q | `0.3.0-draft` (historical label; unchanged) |
+| Implementation and gem release version | `0.1.0` (owner-selected 2026-10-18) |
 | Spec lifecycle | `HANDOFF_READY`; independent H1 complete and owner H2 approved for exact Q |
-| Implementation authorized | 2026-10-17; H2 handoff approved 2026-10-18 (does not authorize RubyGems publication) |
+| Implementation authorized | 2026-10-17; H2 handoff approved 2026-10-18 |
+| RubyGems publication | Owner instructed release of `0.1.0` on 2026-10-18; this later instruction is separate from H2 |
 | Gem | `ruby_llm-browser` |
 | Namespace | `RubyLLM::Browser` |
 | Require path | `ruby_llm/browser` |
@@ -66,37 +68,37 @@ separate specifications repository; this file records exactly which baseline was
 
 These corrections harden engineering behavior. The owner separately approved exact
 Specs candidate Q `22d488987517b10dcd96d2713ed3d47e8818b36b` at H2 on 2026-10-18;
-that approval does not authorize live use or RubyGems publication. See
+that approval does not authorize live use. The owner later authorized release of gem
+version `0.1.0`. The historical candidate label remains `0.3.0-draft` so this record
+does not rewrite the approved Q. See
 [the audit]({% link RELEASE_AUDIT.md %}) for unresolved protocol/product decisions.
 
 ## Outstanding blockers (carried from the spec baseline)
 
-These are **not** satisfied by this repository yet. BR-02 blocks live support; BR-03 and
-BR-04 block publication. They are reproduced in intent so they cannot be quietly dropped.
+These are **not** satisfied by this repository yet. BR-02 blocks live support. The owner
+has authorized the offline-only `0.1.0` release despite the unresolved live blocker; the
+release does not claim to resolve BR-02.
 
 - **BR-02 / live blocker:** a real browser provider must prove browser-side egress
   isolation across navigation, redirects, iframes, popups, subresources, WebSockets and
   metadata routes before live mode is enabled. The first release keeps Stagehand
   unsupported and makes no live calls. Ruby-side URL/DNS checks cannot prove egress.
-- **BR-03 / release blocker:** confirm the exact RubyGems name at publication, publisher
-  account and MFA, and owner/distributor clearance for trademark/affiliation wording.
-  The 2026-10-18 API check returned 404, which means unregistered at that check only;
-  it does not reserve or establish ownership. The 26-gem runtime license metadata
-  inventory now matches the resolved lockfile; the Stagehand MIT text is pinned below.
-  This technical inventory is not legal clearance.
+- **BR-03 / distribution identity:** the package identifies itself as an unofficial
+  community extension and disclaims endorsement. Recheck name availability at publish
+  time. The dependency license inventory is technical evidence, not legal clearance.
 - **BR-04:** independent H1 and owner H2 are complete for the exact Q above. Baseline
-  registration R and the exact-artifact publication approval remain pending. H2 does
-  not authorize RubyGems publication.
+  registration R remains pending. H2 approved handoff; the owner's later `0.1.0` release
+  instruction authorizes publication separately.
 
 ## Owner scope decision (2026-10-18)
 
-The owner selected a read-only first release, deferred the full live Act protocol to a
+The owner selected read-only gem version `0.1.0`, deferred the full live Act protocol to a
 later version, and declined live provider calls. This narrows the first release to the
 offline `FakeBackend` and does not close BR-02 for later live support. Stagehand always
 reports unverified egress, refuses live operations, and sends no provider call including
 cleanup. Unresolved sessions remain `cleanup_pending`. H1/H2 are approved for exact Q;
-registration R, BR-03 owner/distributor clearance, and exact-artifact publication approval
-remain open.
+registration R remains pending. The later release instruction is recorded separately
+from that historical Specs approval.
 
 ## Evidence rule
 

@@ -12,4 +12,5 @@ Use these guides to configure browser tools and understand their limits.
 - [Specification baseline](SPEC_BASELINE.md): product intent and governance boundaries.
 
 Start with the runnable offline example in the [README](../README.md). No guide grants
-authorization to access a source, spend provider credits, or publish a release.
+authorization to access a source or spend provider credits. Gem releases use the reviewed
+tag workflow in [the release checklist](RELEASING.md).

@@ -102,8 +102,8 @@ exclude:
 code_language: ruby
 
 # Values that change between releases. Pages read them as {{ site.version }}
-# and {{ site.examples.NAME }}, so one edit here updates every page. Set
-# `released: true` and the new version in the commit you tag for a release.
+# and {{ site.examples.NAME }}. Keep `released: false` on main; the docs builder
+# reads a release's version from its matching Git tag.
 released: false
 version: "0.1.0"
 examples: {}

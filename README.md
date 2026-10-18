@@ -9,18 +9,17 @@ The first release supports the offline `FakeBackend` only. `StagehandBackend` is
 for future qualification, but it refuses live operations until browser-side egress and
 provider cleanup are qualified.
 
-> **Pre-release, not approved for publication or production use.** Offline tests pass,
-> but browser-side egress, live-provider behavior, and the full session-bound Act
-> approval protocol are not qualified. See the [release audit](docs/RELEASE_AUDIT.md).
-> This project is not maintained or endorsed by RubyLLM or Browserbase.
+> **Version 0.1.0 is the offline-only first release.** The built-in Stagehand backend
+> is unsupported, and the full live Act approval protocol is deferred. No live provider
+> calls were made. See the [release audit](docs/RELEASE_AUDIT.md). This project is not
+> maintained or endorsed by RubyLLM or Browserbase.
 
-## Install from this checkout
+## Install
 
-The gem has not been published to RubyGems. For development:
+Add the gem to your application's Gemfile:
 
 ```ruby
-# Your application's Gemfile
-gem "ruby_llm-browser", path: "/path/to/ruby_llm-browser"
+gem "ruby_llm-browser", "~> 0.1.0"
 ```
 
 The core requires Ruby 3.2+, RubyLLM `>= 2.0, < 3`, `json_schemer ~> 2.5`, and

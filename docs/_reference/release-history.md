@@ -11,13 +11,13 @@ description: Follow release tags and their documentation for RubyLLM::Browser.
 {{ page.description }}
 {: .fs-6 .fw-300 }
 
-The source tree currently reports version `0.1.0`, but that value is not proof of a
-published gem. No release tag is present in this checkout, and the release audit records
-that RubyGems publication is still blocked.
+{% if site.docs_unreleased %}The current source build follows `main`. The latest stable release is `0.1.0`.
+{% else %}This documentation describes the `{{ site.version }}` release. Use the tag and
+release notes to identify the exact source for this version.
+{% endif %}
 
 | Release | Date | Highlights |
 | --- | --- | --- |
-| Next | In development | Offline Act simulation and single-use host approval checks; the full live protocol remains deferred |
+| [0.1.0](https://github.com/yorzi/ruby_llm-browser/releases/tag/v0.1.0) | 2026-10-18 | Offline read-only Inspect and Extract, Rails adapter, and Act simulation; live Stagehand and live Act are unsupported |
 
-When a release is approved and tagged, record its date and link its release notes here.
 For changes to existing applications, follow [Upgrading]({% link _reference/upgrading.md %}).

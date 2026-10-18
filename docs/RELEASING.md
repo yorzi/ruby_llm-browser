@@ -1,18 +1,19 @@
 ---
 layout: default
 title: Compatibility and Release Checklist
-description: Verify the exact artifact and resolve release gates before requesting publication.
+description: Verify the package and release a version from its matching Git tag.
 ---
 
 # Compatibility and release checklist
 
-Verify the exact artifact and resolve the release gates before requesting publication.
+Build and verify the package before you publish a version. GitHub Actions releases the
+gem from the matching version tag and deploys that version's documentation after success.
 
 After reading this guide, you will know:
 
 - Which combinations were exercised.
 - How to run offline checks and build an artifact.
-- Which approvals and provider evidence are still required.
+- Which evidence the automated release checks require.
 
 ## Compatibility evidence
 
@@ -80,38 +81,51 @@ Verify all of the following:
 - Dependency/license inventory and known-advisory check match the resolved versions.
 - Record the artifact SHA-256, exact versions, commands and date in the WORK ledger.
 
-## Publication gates
+## Release boundaries
 
 The first-release scope is offline read-only. `FakeBackend` is the only built-in backend
 supported for operations. `StagehandBackend` refuses live calls, its egress capability
 stays unverified, and cleanup requests are disabled. The full live Act
 protocol is deferred to a later version. No provider calls were run or authorized.
 
-**Publication remains on hold.** Independent H1 and owner H2 are complete for the exact
-Specs candidate Q. RubyGems name/account and MFA, owner/distributor naming and license
-clearance, baseline registration, and exact-artifact review remain open. See [the audit findings]({% link RELEASE_AUDIT.md %}).
+The owner selected version `0.1.0` for this package and instructed its release. H1 and
+H2 approved the product handoff against exact Specs candidate Q
+`22d488987517b10dcd96d2713ed3d47e8818b36b`; the candidate's historical version label is
+`0.3.0-draft`. The later release instruction is separate from H2. See [the audit findings]({% link RELEASE_AUDIT.md %}) for the live-provider limits.
 
-1. Keep Stagehand and live Act unsupported in this release. Before enabling either in a
-   later version, qualify egress across every request path, final URL reporting, TTL,
-   cleanup status, unknown-start recovery, and provider billing controls. This requires a
-   separately authorized live qualification; no such call was made for this release.
-2. H1 and the human HTML freshness gate passed; the owner approved offline read-only v1
-   and its KPI proposal against Q `22d488987517b10dcd96d2713ed3d47e8818b36b`.
-   Registration R and the implementation baseline receipt remain pending.
-3. Recheck RubyGems name availability at push time and verify the publisher account has
-   MFA enabled. The 2026-10-18 API 404 did not reserve the name.
-4. The 26-gem runtime license metadata inventory matches the resolved lockfile; the
-   Stagehand source MIT license is pinned in NOTICE. Owner/distributor clearance for
-   the name, trademark and affiliation wording remains open.
-5. Run remote CI for the final commit, review the exact artifact, and obtain explicit
-   publication approval for that artifact before pushing it to RubyGems.
+Keep Stagehand unsupported and live Act disabled. Before enabling either in a later
+version, qualify egress across every request path, final URL reporting, TTL, cleanup
+status, unknown-start recovery, and provider billing controls. No live provider call was
+made for `0.1.0`.
 
-Keep the changelog under **Unreleased** until publication. Building version `0.1.0` is
-not proof a `0.1.0` release exists. This checklist does not create a tag, push commits,
-change repository visibility, or invoke RubyGems publication.
+## Releasing a version
+
+For a later version, update the gem version in `lib/ruby_llm/browser/version.rb` and the
+documentation version in `docs/_config.yml` to the same value. Keep `released: false` on
+`main`; the documentation builder uses release tags for the stable site and builds the
+working tree under `/next/`. Add a matching release entry to `CHANGELOG.md` and
+`docs/_reference/release-history.md`.
+
+Run the checks above, review the package contents and push the completed commit to
+`main`. Then create and push a matching tag, for example `v0.2.0` for gem version
+`0.2.0`:
+
+```bash
+git tag -a v0.2.0 -m "Release 0.2.0"
+git push origin v0.2.0
+```
+
+The `Release Gem` workflow rejects a tag that does not match both the gem and docs
+versions, or has no matching changelog section. It runs the suite, dependency audit and
+isolated package verification before RubyGems publishing through OIDC trusted publishing.
+On success it creates a GitHub Release with the gem, checksum and matching changelog
+section. The Docs workflow then builds the tagged stable docs plus current `main` docs.
+Configure the matching
+pending trusted publisher on RubyGems with owner `yorzi`, repository `ruby_llm-browser`,
+workflow `release.yml`, and environment `release` before the first tag.
 
 ## Next steps
 
 - Review the requirement evidence in the source repository's `docs/WORK.md` and the [remaining audit findings]({% link RELEASE_AUDIT.md %}).
 - Follow the source repository's `docs/RELEASE_ACTION_PLAN.md` for the selected scope and
-  the remaining review and distribution gates.
+  future version workflow.

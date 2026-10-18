@@ -12,15 +12,14 @@ description: Check the supported upgrade path before moving a RubyLLM::Browser a
 
 After reading this guide, you will know:
 
-* Why there is no public version-to-version upgrade path yet.
+* What changed in the first public release.
 * Where to find migration steps for earlier development snapshots.
 * What evidence must exist before a release tag is treated as supported.
 
 ## Public Releases
 
-No public version has been released. The repository version constant is `0.1.0`, but
-version metadata alone does not establish that the gem is available from RubyGems. The
-release audit lists the provider, approval-protocol, and ownership gates that remain.
+Version `{{ site.version }}` is the first public release. It has no earlier public version
+to migrate from. Install it with `bundle add ruby_llm-browser --version "~> {{ site.version }}"`.
 
 ## Earlier Development Snapshots
 
@@ -31,4 +30,4 @@ or rerun a create-table migration. Follow the additive migration instructions un
 ## Next Steps
 
 * Review the [release history]({% link _reference/release-history.md %}) for version records.
-* Review the [release audit]({% link RELEASE_AUDIT.md %}) before relying on a future release.
+* Review the [release audit]({% link RELEASE_AUDIT.md %}) before enabling a live backend.

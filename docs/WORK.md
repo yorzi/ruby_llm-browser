@@ -46,7 +46,7 @@ proves remote browser egress and no live Stagehand call has been run.
 | FR-05 approved Act | `spec/ruby_llm/browser/act_spec.rb`, `spec/ruby_llm/browser/engine_spec.rb` | same, `spec/security/release_audit_spec.rb` | PASS for offline simulation only; live Act deferred, same-session protocol NOT IMPLEMENTED | 2026-10-18 |
 | FR-06 Rails jobs | `spec/rails/operation_job_spec.rb`, `spec/rails/reaper_spec.rb`, `spec/rails/active_record_operation_store_spec.rb`, `spec/rails/active_record_approval_store_spec.rb` | same (wrong actor, fenced-out worker, cancel-mid-session, cleanup_pending visible) | PASS (fake backend + in-memory SQLite) | 2026-10-17 |
 | FR-07 failure/budget/audit | `spec/ruby_llm/browser/engine_spec.rb` (budget, redaction), `spec/ruby_llm/browser/stagehand_backend_spec.rb` | `spec/integration/stagehand_http_spec.rb` (stubbed HTTP; default live calls refused; cleanup ACK not closure), `spec/ruby_llm/browser/doctor_spec.rb` | Offline contract tests only; live Stagehand calls NOT RUN and unsupported | 2026-10-18 |
-| FR-08 full delivery | Build/install evidence below, `spec/integration/documentation_spec.rb` | Core/Rails require, generator/migration and compatibility suites | Package checks PASS; H1/H2 approved for exact Q; publication HOLD for name/account, MFA, owner clearance and exact artifact, see audit | 2026-10-18 |
+| FR-08 full delivery | Build/install evidence below, `spec/integration/documentation_spec.rb` | Core/Rails require, generator/migration and compatibility suites | Package checks PASS; H1/H2 approved for exact Q; owner later authorized the offline-only `0.1.0` release; release outcome is recorded separately | 2026-10-18 |
 
 Run command for every row: `bundle exec rspec` (and `bundle exec rubocop`). Environment is
 the pinned local table above.
@@ -70,7 +70,8 @@ rails=RubyLLM::Browser::Rails::OperationJob
 ```
 
 The packaged gem contains the plain-Ruby core, the opt-in Rails adapter and the install
-generator. Public RubyGems publication stays blocked on BR-03 (name/license clearance).
+generator. At the time of this initial package check, RubyGems publication was blocked on
+BR-03 (name/license clearance).
 
 The original install above used `--ignore-dependencies` and borrowed the development
 GEM_PATH. It proved loading the artifact, **not** clean dependency resolution. The later
@@ -111,7 +112,7 @@ Markdown links, shipped files and executable offline README examples.
 | Live provider egress / TTL / billing / final URL | No live session authorized or run | NOT RUN |
 | PostgreSQL concurrency | No PostgreSQL fixture run | NOT RUN |
 | Expanded remote CI | Linux Ruby 3.2/3.3/3.4, RubyLLM 2.0.0/2.1.1, Rails 8.1 plus Rails 8.0 row | PASS for `0ec34d4`: seven test jobs plus build/install/advisory job |
-| Public release | H1/H2 for exact Q, BR-03 naming/license, exact artifact | HOLD; H1/H2 passed, distribution clearance and artifact approval remain open |
+| Public release at initial hardening audit | H1/H2 for exact Q, BR-03 naming/license, exact artifact | HOLD at that time; H1/H2 passed, distribution clearance and artifact approval remained open |
 
 ### Stronger package-install evidence
 
@@ -197,7 +198,7 @@ revocation, binding, concurrency, denial results, and this boundary.
 | `bundle exec rake build` | PASS: built `ruby_llm-browser-0.1.0.gem` |
 | `bundle exec ruby bin/verify-package --rails --audit` | PASS: `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, and `RAILS_PACKAGE_PASS`; isolated clean install |
 | Live provider egress, TTL, billing, and terminal cleanup | NOT RUN; no live calls authorized |
-| RubyGems publication | HOLD: H1/H2 passed for exact Q; name/account/MFA, owner clearance and exact artifact approval remain open |
+| RubyGems publication | NOT ATTEMPTED at this audit snapshot, before the later owner instruction to release version `0.1.0` |
 
 These local checks do not qualify browser-side egress, provider TTL, billing, or remote
 cleanup. They validate a local unpublished candidate, not a release. Rebuild the exact
@@ -224,6 +225,22 @@ authorize RubyGems publication.
 
 The license inventory is a point-in-time metadata check, not legal clearance. Recheck
 name availability and the final built artifact immediately before any release.
+
+### 0.1.0 release decision and automation (2026-10-18)
+
+After the initial publication hold above, the owner selected gem version `0.1.0`,
+instructed the matching `v0.1.0` tag and RubyGems release, and requested automation for
+future version tags. This instruction authorizes the offline-only package release; it is
+separate from H2 handoff approval. The approved Specs Q keeps its historical candidate
+label `0.3.0-draft`. Stagehand remains unsupported, live Act remains deferred, and no
+provider calls were authorized or made.
+
+The repository release workflow runs tests, the dependency advisory scan and isolated
+package verification before RubyGems trusted publishing. It then creates a GitHub Release
+with the generated gem, checksum and matching changelog section. The Docs workflow builds
+the tag's stable documentation only after that release workflow succeeds. The first tag
+is pushed only after the trusted publisher is registered for this repository and the
+`release.yml` workflow under the `release` GitHub environment.
 
 ## Commit log
 

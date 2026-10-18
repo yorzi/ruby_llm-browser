@@ -4,9 +4,7 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-Planned version: 0.1.0. No public release has been published.
+## [0.1.0] - 2026-10-18
 
 ### Fixed
 
@@ -30,7 +28,6 @@ Planned version: 0.1.0. No public release has been published.
 - The first-release scope is offline read-only. Stagehand remains unsupported until
   provider egress and confirmed cleanup are qualified; no live calls were made. Full live
   Act is deferred to a later version, while offline Act simulation remains available.
-- H1/H2 are approved for the exact offline read-only Specs candidate. Name/account, MFA, trademark/affiliation review, and exact-artifact publication approval still block a RubyGems release.
 - See `docs/RELEASE_AUDIT.md` for findings, mitigations and residual limits.
 
 The first implementation milestone. Everything below is proven offline against the fake

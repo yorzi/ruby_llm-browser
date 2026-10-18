@@ -2,7 +2,7 @@
 layout: default
 title: Getting Started
 nav_order: 1
-description: Install the unreleased source gem and run a read-only operation with its offline backend.
+description: Install the gem and run a read-only operation with its offline backend.
 ---
 
 # {{ page.title }}
@@ -12,13 +12,19 @@ description: Install the unreleased source gem and run a read-only operation wit
 
 After reading this guide, you will know:
 
-* How to install the current source version.
+* How to install the published gem or the current source version.
 * How to run Inspect and Extract without a provider or network request.
 * Where to review live-provider limitations.
 
 ## Installation
 
-The gem is not published to RubyGems. Install it from the default branch:
+The stable release is `{{ site.version }}`. Add it to your Gemfile:
+
+```ruby
+gem "ruby_llm-browser", "~> {{ site.version }}"
+```
+
+For unreleased development changes, install the default branch instead:
 
 ```sh
 bundle add ruby_llm-browser --git https://github.com/yorzi/ruby_llm-browser --branch main

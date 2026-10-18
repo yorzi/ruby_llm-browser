@@ -8,9 +8,11 @@ require "json"
 require "open3"
 require "rbconfig"
 require "tmpdir"
+require_relative "../lib/ruby_llm/browser/version"
 
 supplied = ARGV.find { |arg| !arg.start_with?("--") }
-artifact = supplied ? File.expand_path(supplied) : File.expand_path("../pkg/ruby_llm-browser-0.1.0.gem", __dir__)
+artifact_name = "ruby_llm-browser-#{RubyLLM::Browser::VERSION}.gem"
+artifact = supplied ? File.expand_path(supplied) : File.expand_path("../pkg/#{artifact_name}", __dir__)
 abort "Build the artifact first: bundle exec rake build" unless File.file?(artifact)
 base = ENV.fetch("TMPDIR", Dir.tmpdir)
 home = Dir.mktmpdir("browser-package-", base)

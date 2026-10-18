@@ -1,12 +1,12 @@
 ---
 layout: default
 title: Release Audit
-description: Local audit of release fixes, remaining publication blockers, and evidence limits.
+description: Record release fixes, provider limits, and the scope of available evidence.
 ---
 
 # Release audit: 2026-10-18
 
-**Current decision: publication is on hold; the approved first-release scope is offline read-only.**
+**Audit snapshot before the 0.1.0 release instruction: publication was on hold; the selected first-release scope was offline read-only.**
 
 The original 270-example suite was green, but source review and new negative tests
 found security/lifecycle defects and documentation errors. Those defects are hardened
@@ -143,7 +143,16 @@ therefore sends no Stagehand provider request, including `end_`; cleanup remains
 tests now assert that no cleanup request is dispatched.
 
 No egress, TTL, billing, or cleanup live calls were made. BR-02 remains open for any
-future live backend, but it no longer blocks the offline-only first-release scope. BR-03
-and BR-04 still block RubyGems publication: naming/license decisions and independent H1
-plus owner H2 remain incomplete. The owner's request to publish is recorded; no push was
-attempted while these gates remain open.
+future live backend, but it does not block the offline-only first-release scope. At the
+time of this initial audit snapshot, distribution decisions and the final release
+instruction were pending.
+
+## Owner release instruction (2026-10-18)
+
+After the initial audit snapshot, the owner selected gem version `0.1.0`, requested a
+matching Git tag, instructed RubyGems publication, and requested GitHub Actions automation
+for later version tags. This instruction authorizes the offline-only package release; it
+does not authorize provider calls, make Stagehand supported, or implement live Act. The
+approved Specs Q remains identified by its historical candidate label `0.3.0-draft`.
+RubyGems publication and GitHub Pages deployment results are recorded separately from
+this pre-release audit snapshot.

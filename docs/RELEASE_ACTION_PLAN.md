@@ -1,14 +1,15 @@
 ---
 layout: default
-title: Owner Action Plan
-description: Choose the release scope, qualify the deployment, and resolve publication gates.
+title: Release Action Plan
+description: Record the offline first-release decision and the automated gem release path.
 llms: false
 ---
 
-# Owner action plan
+# Release action plan
 
-The first-release scope is selected. Resolve the remaining governance and distribution
-gates before attempting publication.
+The owner selected the offline-only first release as `0.1.0`, authorized its publication,
+and requested tag-based release automation. This plan preserves the live-provider limits
+and records the release checks.
 
 ## Current position
 
@@ -19,20 +20,21 @@ gates before attempting publication.
 - No live provider calls are authorized or were run for this decision.
 - Independent H1 and owner H2 are complete for exact candidate Q
   `22d488987517b10dcd96d2713ed3d47e8818b36b`. H2 approves handoff, not RubyGems publication.
-- The 2026-10-18 RubyGems API check returned 404 for `ruby_llm-browser`; the name was
-  unregistered at that time and is not reserved. The resolved 26-gem runtime license
-  inventory matches installed gemspec metadata; Stagehand is covered by its pinned source MIT text.
-- Publication remains on hold for baseline registration, name/account and MFA checks,
-  owner/distributor naming and affiliation clearance, final artifact review, and explicit
-  approval of that exact artifact. This gem requires publisher MFA; RubyGems rejects the
-  first push if the publisher account has not enabled it.
+- The RubyGems page for `ruby_llm-browser` returned 404 during the pre-release check on
+  2026-10-18; that did not reserve the name. The resolved 26-gem runtime license inventory
+  matches installed gemspec metadata; Stagehand is covered by its pinned source MIT text.
+- The owner later instructed publication of gem version `0.1.0`; that instruction is
+  separate from H2's handoff approval. RubyGems MFA is enabled on the signed-in publisher
+  account. Trusted publishing must match this repository's `release.yml` workflow and
+  `release` environment.
 
-## Your next decision
+## Release scope
 
 The first version supports offline `FakeBackend` operations. `StagehandBackend` remains in
 the source but cannot start or operate on a live session. The full same-session Act
-protocol is deferred to a later version. H1/H2 approved this scope for handoff; neither
-the scope decision nor H2 approves RubyGems publication.
+protocol is deferred to a later version. H1/H2 approved this scope for handoff against
+exact Q `22d488987517b10dcd96d2713ed3d47e8818b36b`; the approved Specs candidate label
+`0.3.0-draft` is historical provenance. The package and Git release use `0.1.0`.
 
 ## Remaining work and ownership
 
@@ -40,9 +42,9 @@ the scope decision nor H2 approves RubyGems publication.
 | --- | --- | --- |
 | Release scope / Act | H2 approved the read-only scope and KPI proposal against exact Q. Live Act remains a later-version feature. | Keep the Stagehand adapter disabled and preserve the H2 decision in release docs. |
 | Provider qualification | No live call is authorized for the first release. A later live release needs a named deployment and approval of data-processing/billing owners. | Record the unsupported egress and cleanup guarantees. Do not use a host assertion as qualification. |
-| Name and account | Confirm the publisher identity, maintain a RubyGems account with MFA, and accept the naming/affiliation/license review. | Recheck availability, assemble license evidence, prepare release metadata and a trusted-publishing workflow. An unregistered name is not reserved; do not publish a placeholder to claim it. |
-| Formal approval | H1 and H2 are complete for exact Q; C/R registration and implementation baseline receipt remain pending. | Finish the source baseline registration and update the implementation receipt without changing approved product intent. |
-| Publication | Explicitly approve the exact release artifact and public disclosure. | Build, verify, tag and publish only within the final authorization; provide checksums and a post-release verification report. |
+| Name and account | The owner authorized publication as `ruby_llm-browser`; the account has MFA enabled. | Recheck name availability at publication and use the pending trusted publisher configured for this repo and workflow. |
+| Formal approval | H1 and H2 are complete for exact Q; C/R registration and implementation baseline receipt remain pending. | Preserve the historical approval. Do not represent H2 as RubyGems authorization; the owner's later release instruction supplies that authorization. |
+| Publication | Owner instructed publication of package version `0.1.0`. | Verify the matching tag, run the release workflow, then record the RubyGems, GitHub Release and Pages outcomes. |
 
 ## Provider questions to resolve before live tests
 
@@ -72,17 +74,8 @@ services. Supply credentials through local secret management, never in chat or c
 The assistant can first prepare this plan without credentials or paid calls. If required
 network isolation cannot be established, do not proceed with live browsing.
 
-## Public disclosure decision
+## Provider boundary
 
-Making the GitHub repository public exposes its tracked files, including files outside the
-gem package. Review the repository contents before changing visibility. RubyGems
-publication is a separate disclosure and still needs approval for the exact release.
-
-## Suggested next instruction
-
-> Prepare and review the read-only first release. Keep Stagehand and live Act disabled.
-> Do not make provider calls. Attempt RubyGems publication only after H1/H2, name/license,
-> and exact-artifact gates pass.
-
-The owner selected this first-release scope on 2026-10-18. The publication request does
-not override the outstanding review and distribution gates.
+The release instruction does not authorize provider calls or live browsing. Keep
+Stagehand and live Act disabled until the missing provider guarantees are separately
+qualified and approved. A Ruby source URL allowlist is not browser-side egress proof.
