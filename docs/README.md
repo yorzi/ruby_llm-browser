@@ -7,6 +7,7 @@ Use these guides to configure browser tools and understand their limits.
 - [Security model](SECURITY_MODEL.md): trust boundaries and live deployment qualification.
 - [Release checklist](RELEASING.md): compatibility, package verification, and owner approvals.
 - [Release audit](RELEASE_AUDIT.md): findings, fixes, and remaining publication blockers.
+- [Owner action plan](RELEASE_ACTION_PLAN.md): decisions you own and work you can delegate.
 - [WORK ledger](WORK.md): exact commands and offline requirement evidence.
 - [Specification baseline](SPEC_BASELINE.md): product intent and governance boundaries.
 

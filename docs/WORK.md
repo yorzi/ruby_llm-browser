@@ -103,7 +103,7 @@ Markdown links, shipped files and executable offline README examples.
 | Runtime dependency advisories | ruby-advisory-db `fa2295251efb3b0d1a300e5ce8ad700ff1f1b485` | No known vulnerabilities found |
 | Live provider egress / TTL / billing / final URL | No live session authorized or run | NOT RUN |
 | PostgreSQL concurrency | No PostgreSQL fixture run | NOT RUN |
-| Expanded remote CI | New matrix is uncommitted/unpushed during audit | NOT RUN |
+| Expanded remote CI | Linux Ruby 3.2/3.3/3.4, RubyLLM 2.0.0/2.1.1, Rails 8.1 plus Rails 8.0 row | PASS for `0ec34d4`: seven test jobs plus build/install/advisory job |
 | Public release | BR-02, missing live Act protocol, BR-03/04 | NO-GO |
 
 ### Stronger package-install evidence
@@ -135,6 +135,15 @@ zlib 3.2.4. Native Ruby/system-library security is a separate host responsibilit
 Full installer/smoke logs and `activated-versions.json` remain in the temporary evidence
 directory printed by the verifier. The verifier prints the artifact SHA-256; a local
 `pkg/SHA256SUMS` accompanies the final artifact. Build/install is not publication.
+
+### Submission evidence (2026-10-18)
+
+The hardening is committed and pushed as `0ec34d4b48e0e3ab88bb893c4c731777d2aa24af`.
+[CI run 39086570934](https://github.com/yorzi/ruby_llm-browser/actions/runs/39086570934)
+completed successfully: all seven test jobs report `302 examples, 0 failures`, and
+the package job reports no known dependency advisories plus all three clean-install
+success markers. The repository remains private; no RubyGems release or paid provider
+call was performed. Publication remains NO-GO for the other recorded gates.
 
 ## Commit log
 

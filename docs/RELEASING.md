@@ -20,8 +20,9 @@ JSONSchemer **2.5.0**, and sqlite3 **2.10.0**. Full offline suites cover:
 | 2.0.0 | 8.0.5.1 | PASS |
 
 The expanded CI configuration includes Ruby 3.2/3.3/3.4 and RubyLLM 2.0.0/2.1.1,
-plus Rails 8.0. The expanded workflow has not run remotely until these changes are
-committed and pushed. Do not treat a prior green workflow as evidence for new changes.
+plus Rails 8.0. All seven compatibility jobs and the build/install/advisory job passed
+for commit `0ec34d4` in [this CI run](https://github.com/yorzi/ruby_llm-browser/actions/runs/39086570934).
+Do not treat that run as evidence for later code changes or live provider guarantees.
 Rails 7 and MySQL are not supported targets. PostgreSQL must be tested separately.
 
 ## Running checks
@@ -96,3 +97,5 @@ change repository visibility, or invoke RubyGems publication.
 ## Next steps
 
 - Review [requirement evidence](WORK.md) and [remaining audit findings](RELEASE_AUDIT.md).
+- Follow the [owner action plan](RELEASE_ACTION_PLAN.md) to decide the release scope
+  and delegate the remaining preparation without authorizing publication prematurely.

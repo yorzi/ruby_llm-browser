@@ -4,7 +4,7 @@
 
 The original 270-example suite was green, but source review and new negative tests
 found security/lifecycle defects and documentation errors. Those defects are hardened
-in this working tree. A green offline suite does not close the provider, authorization,
+in commit `0ec34d4`. A green offline suite does not close the provider, authorization,
 name/license, or specification-governance gates below. Nothing has been published.
 
 ## Fixed findings
@@ -75,8 +75,8 @@ grant those approvals.
 
 ## Limits and follow-up checks
 
-- PostgreSQL and multiple OS/Ruby combinations need the new CI/DB matrix; only local
-  Ruby 3.3.5 and SQLite are exercised here. Rails 7 is not a supported target.
+- PostgreSQL remains untested. Local macOS Ruby 3.3.5 and the Linux Ruby 3.2/3.3/3.4
+  CI combinations pass with SQLite. Rails 7 is not a supported target.
 - A global reaper cannot route between backend credential configurations; use one
   configuration per scoped store until provider identity is durably represented.
 - `max_cost_usd` is advisory. No provider-enforced currency cap or cost ledger exists.
@@ -99,3 +99,12 @@ known vulnerable dependencies (database commit
 not a guarantee of no vulnerabilities. Fresh installation also passes the core/Rails
 examples and installed generator/migration, and the activated clean core runtime is
 checked separately against advisories. Artifact verification is recorded in WORK.
+
+## Submission verification
+
+Commit `0ec34d4` is pushed to the private repository. The expanded
+[GitHub Actions run](https://github.com/yorzi/ruby_llm-browser/actions/runs/39086570934)
+passed all seven compatibility jobs (302 examples each) and the build/install/advisory
+job, including `CORE_PACKAGE_PASS`, `CLEAN_RUNTIME_ADVISORIES_PASS`, and
+`RAILS_PACKAGE_PASS`. This closes the expanded-CI follow-up, not the live-provider or
+owner-approval gates. See [the owner action plan](RELEASE_ACTION_PLAN.md).
