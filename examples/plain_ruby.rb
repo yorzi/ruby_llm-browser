@@ -23,11 +23,9 @@ context = RubyLLM::Browser::Context.new(
   budget: RubyLLM::Browser::Budget.new(max_seconds: 30, max_steps: 6)
 )
 
-inspect = RubyLLM::Browser::Inspect.new(context: context)
-puts "Inspect: #{inspect.execute(url: "https://docs.example.com/")}"
-
 schema = { "type" => "object", "properties" => { "title" => { "type" => "string" } } }
-extract = RubyLLM::Browser::Extract.new(context: context, schema: schema)
+inspect, extract = RubyLLM::Browser.tools(context: context, schema: schema)
+puts "Inspect: #{inspect.execute(url: "https://docs.example.com/")}"
 puts "Extract: #{extract.execute(url: "https://docs.example.com/", instruction: "the title")}"
 
 blocked = inspect.execute(url: "http://169.254.169.254/latest/meta-data")

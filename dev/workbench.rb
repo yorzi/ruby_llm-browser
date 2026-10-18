@@ -43,9 +43,10 @@ class BrowserWorkbench
       source_policy: RubyLLM::Browser::Policy.new(allowed_hosts: [ "docs.example.com" ], resolver: RESOLVER),
       operation_store: RubyLLM::Browser::InMemoryOperationStore.new
     )
+    inspect, extract = RubyLLM::Browser.tools(context: context, schema: SCHEMA)
     data = case operation
-    when "inspect" then RubyLLM::Browser::Inspect.new(context: context).call(url: url)
-    when "extract" then RubyLLM::Browser::Extract.new(context: context, schema: SCHEMA).call(url: url)
+    when "inspect" then inspect.call(url: url)
+    when "extract" then extract.call(url: url)
     when "doctor" then RubyLLM::Browser::Doctor.new(backend: backend, env: {}).report
     else { status: "error", error: { code: "INVALID_INPUT" } }
     end

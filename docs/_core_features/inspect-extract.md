@@ -41,8 +41,7 @@ schema = {
   "required" => [ "title" ], "additionalProperties" => false
 }
 
-inspect_tool = RubyLLM::Browser::Inspect.new(context: context)
-extract_tool = RubyLLM::Browser::Extract.new(context: context, schema: schema)
+inspect_tool, extract_tool = RubyLLM::Browser.tools(context: context, schema: schema)
 
 puts inspect_tool.execute(url: "https://docs.example.com/")[:status] # => ok
 puts extract_tool.execute(url: "https://docs.example.com/")[:data]   # => {"title"=>"Example"}
@@ -53,6 +52,23 @@ example supplies the exact sample output above. In an application, register thes
 instances on a configured RubyLLM chat. The host should select the context and schema;
 the model supplies only the URL, optional instruction, and an optional positive
 `max_bytes` limit.
+
+## Register the Read-only Pair
+
+Once your host has a context and schema, register both tools in one call:
+
+```ruby
+chat.with_tools(*RubyLLM::Browser.tools(context: context, schema: schema))
+```
+
+The factory returns fresh Inspect and Extract instances in that order. Both use the
+same context; Extract keeps its own immutable schema copy. It never includes Act,
+loads credentials, or starts an operation. A missing context or schema is rejected
+by the existing constructors. Schema contents are checked by policy when Extract
+runs, before a session starts.
+
+You can still construct either tool separately with `Inspect.new(context:)` or
+`Extract.new(context:, schema:)`. That remains useful when a chat needs only one tool.
 
 ## Inspect a Page
 

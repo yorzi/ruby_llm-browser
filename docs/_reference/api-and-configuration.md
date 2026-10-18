@@ -40,10 +40,14 @@ credential, schema, source allowlist, consent record, or budget.
 ## Registering tools
 
 ```ruby
-inspect_tool = RubyLLM::Browser::Inspect.new(context: context)
-extract_tool = RubyLLM::Browser::Extract.new(context: context, schema: schema)
-chat.with_tools(inspect_tool, extract_tool)
+chat.with_tools(*RubyLLM::Browser.tools(context: context, schema: schema))
 ```
+
+`Browser.tools` returns fresh Inspect and Extract instances in that order, sharing
+the supplied context. It never includes Act or dispatches an operation. You can also
+construct either tool separately with `Inspect.new(context:)` and
+`Extract.new(context:, schema:)`. Constructors reject missing host bindings; schema
+contents are validated by policy when Extract runs, before a session starts.
 
 Both tools expose `url`, optional `instruction`, and optional positive integer
 `max_bytes`. `max_bytes` can only tighten the policy and operation ceilings.

@@ -47,6 +47,17 @@ module RubyLLM
   # operation and session lifecycle, budgets and one-use action approvals.
   module Browser
     class << self
+      # Builds the read-only tool pair for a host-supplied context and schema.
+      #
+      #   chat.with_tools(*RubyLLM::Browser.tools(context: context, schema: schema))
+      #
+      # No operation is dispatched. Act is never included. Constructor validation
+      # applies here; the host policy validates schema contents when Extract runs.
+      # @return [Array<Inspect, Extract>] fresh instances sharing the supplied context
+      def tools(context:, schema:)
+        [ Inspect.new(context: context), Extract.new(context: context, schema: schema) ]
+      end
+
       # Process-wide defaults (see {Configuration}).
       def configuration
         @configuration ||= Configuration.new
