@@ -24,8 +24,9 @@ Ruby and through the optional Rails adapter.
 
 Version 0.1.0 introduced the offline foundation: Inspect, Extract, URL policy, bounded
 results, operation bookkeeping, Rails jobs, and Act simulation. It does not provide a
-supported live backend. The current Stagehand adapter refuses live operations. Rails
-jobs track state but do not durably deliver result bodies.
+supported live backend. The current Stagehand adapter refuses live operations. The
+0.3.0 development candidate adds opt-in Rails result delivery to host-owned storage;
+it does not add a gem-managed results database or guaranteed delivery.
 
 **This is a proposed development sequence, not a list of available features or release
 dates.** Future API names below are proposals. Keep each release small; use patch
@@ -48,7 +49,7 @@ feedback to settle the public API.
 
 ### 0.2.0: Two Small Features
 
-Version `0.2.0` adds both features below. Later milestones remain proposed scope. See
+Version `0.2.0` adds both features below. Milestones after the current 0.3 candidate remain proposed scope. See
 [What's New]({% link _getting_started/whats-new-in-0-2.md %}) for usage and
 [development and testing]({% link _advanced/development-and-testing.md %}) for validation.
 
@@ -72,8 +73,15 @@ validation precede the release tag and publication.
 
 ### 0.3.0: Complete the Rails Result Path
 
-Add an opt-in result-delivery hook that lets the host persist the sanitized `Result`
-against its operation ID. Provide a runnable host example that stores and retrieves
+Implemented in the unreleased development candidate: `Rails.result_delivery`, typed
+host-delivery failures, and a runnable SQLite host example with separate workers.
+Read [What's New in 0.3]({% link _getting_started/whats-new-in-0-3.md %}) and
+[Rails Result Delivery]({% link _advanced/result-delivery.md %}) for the current API.
+The source repository's `docs/evidence/V0_3_VALIDATION.md` records candidate checks and
+remaining release gates. Remote CI and publication require the release step.
+
+The candidate provides an opt-in result-delivery hook that lets the host persist the sanitized `Result`
+against its operation ID. Its runnable host example stores and retrieves
 the result after an asynchronous job finishes. The host owns access checks, retention,
 and storage; the gem does not need an admin interface or a general results database.
 

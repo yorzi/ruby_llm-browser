@@ -1,9 +1,7 @@
 ---
 layout: default
 title: What's New in 0.2
-redirect_from:
-  - /whats-new/
-nav_order: 4
+nav_order: 5
 description: Use the read-only tool factory and backend-aware diagnostics in this release.
 ---
 
