@@ -186,3 +186,14 @@ that a click is harmless. The Stagehand adapter does not support Act in this rel
 
 - Read [Rails integration]({% link _advanced/rails-integration.md %}) for durable workers and recovery.
 - Read [security boundaries]({% link SECURITY_MODEL.md %}) before qualifying a live backend.
+
+## Rails Result Delivery
+
+After `require "ruby_llm/browser/rails"`, set `Rails.result_delivery` to a callable
+accepting `operation:` and `result:`, or `nil` to disable it. `Rails.reset!` clears the
+hook. The callback runs synchronously after execution and cleanup. Return values are
+ignored; exceptions become `Rails::ResultDeliveryError` (`RESULT_DELIVERY_FAILED`),
+which exposes `operation` and `result` to trusted recovery code. These objects are
+not automatically persisted. Duplicate browser jobs do not retry delivery. Read
+[Rails Result Delivery]({% link _advanced/result-delivery.md %}) for storage, access,
+cancellation, and crash boundaries.

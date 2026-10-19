@@ -27,6 +27,7 @@ require_relative "rails/operation_record"
 require_relative "rails/approval_record"
 require_relative "rails/active_record_operation_store"
 require_relative "rails/active_record_approval_store"
+require_relative "rails/result_delivery_error"
 require_relative "rails/operation_job"
 require_relative "rails/reaper"
 
@@ -40,6 +41,20 @@ module RubyLLM
       class << self
         # ->(actor_id:, run_id:) { RubyLLM::Browser::Context }, supplied by the host.
         attr_accessor :context_factory
+
+        # Optional host callback: ->(operation:, result:) { persist_result }.
+        # Runs synchronously after execution and cleanup, before the job returns.
+        # Raise to report failure; return values are ignored. Duplicate jobs do not
+        # redeliver. The host owns persistence, idempotency, access and recovery.
+        attr_reader :result_delivery
+
+        def result_delivery=(callback)
+          unless callback.nil? || callback.respond_to?(:call)
+            raise InvalidInput, "result_delivery must be callable or nil"
+          end
+
+          @result_delivery = callback
+        end
 
         # Returns the current UTC time used by the adapter.
         def clock
@@ -68,6 +83,7 @@ module RubyLLM
         # Restores process defaults. Primarily a test helper.
         def reset!
           @context_factory = nil
+          @result_delivery = nil
           @clock = nil
           @job_queue = nil
           @operation_store = nil

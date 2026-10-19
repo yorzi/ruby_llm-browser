@@ -91,8 +91,14 @@ module RubyLLM
                                      max_bytes: max_bytes)
 
           # Keep unknown action/start results, even when cleanup later closes a session.
-          final = settled(operation_id)
+          completed = store.fetch!(operation_id)
+          final = settled(completed)
           return :cancelled if final == :cancelled
+          # Cancellation can still await cleanup. A reaper or newer worker can also
+          # fence this job while the browser call is in flight.
+          return :fenced_out unless completed.cancel_requested? || completed.fence == leased.fence
+
+          deliver(completed, result) unless completed.cancel_requested?
 
           result.ok? ? (final || result.to_h) : result.to_h
         rescue InvalidInput => e
@@ -106,13 +112,19 @@ module RubyLLM
         # Reports the durable state if the host cancelled or another worker fenced this
         # one while the operation was running; otherwise returns nil so the engine's own
         # result is used.
-        def settled(operation_id)
-          final = store.fetch(operation_id)
-          case final&.state
+        def settled(operation)
+          case operation.state
           when :cancelled then :cancelled
           when :cleanup_pending then :cleanup_pending
           when :unknown then :unknown
           end
+        end
+
+        def deliver(operation, result)
+          RubyLLM::Browser::Rails.result_delivery&.call(operation: operation, result: result)
+        rescue StandardError
+          # Queue logs may print chained exceptions containing host credentials.
+          raise ResultDeliveryError.new(operation: operation, result: result), cause: nil
         end
 
         def run(kind, operation, url:, instruction:, schema:, max_bytes:)

@@ -15,6 +15,22 @@ After reading this guide, you will know:
 - Which tool and diagnostic contracts remain compatible.
 - How to preserve data from earlier development snapshots.
 
+## Upgrade from 0.2.0
+
+The 0.3 development candidate adds no gem-managed database migration. Preserve all
+operation, approval, and actor-lock rows. Do not rerun the install generator on an
+existing installation. Result storage belongs to your application.
+
+`Rails.result_delivery` defaults to `nil`. Existing job return values remain supported.
+A worker fenced during browser execution now returns `:fenced_out` and cannot deliver
+its stale result. Cancelled work never invokes the delivery hook, including while
+cleanup remains pending. To opt in, follow
+[Rails Result Delivery]({% link _advanced/result-delivery.md %}).
+
+A callback failure raises `Rails::ResultDeliveryError`. Queue retries do not redeliver
+a result. Configure host persistence and recovery before enabling the callback; the
+retained error object is not durable storage. Stagehand remains unsupported.
+
 ## Upgrade from 0.1.0
 
 Update your Gemfile and bundle:

@@ -15,6 +15,7 @@ After reading this guide, you will know:
 
 - How to install the adapter's tables.
 - How to build a freshly authorized job context with matching budgets.
+- How to deliver results to host storage.
 - How to inspect status, cancel work, and recover orphaned sessions.
 
 ## Installing the adapter
@@ -103,9 +104,12 @@ summary = operation.summary
 
 `summary` omits provider session IDs and budget internals. It reports state, steps,
 bytes, fence, timestamps, error code and cancellation flag. It is coarse progress,
-not a percentage-complete promise. No result body is durably stored by the job; the
-host must explicitly implement authorized result storage/delivery if needed. Do not
-rely on an Active Job return value after asynchronous execution.
+not a percentage-complete promise. To persist a result body, opt in to
+`RubyLLM::Browser::Rails.result_delivery`. The callback receives `operation:` and
+`result:` after execution and cleanup. Your application owns storage and authorized
+retrieval. Read [Rails result delivery]({% link _advanced/result-delivery.md %}) for
+failure handling and recovery. Do not rely on an Active Job return value after
+asynchronous execution.
 
 The stores are trusted server APIs, not tenant-safe controllers. They expose unscoped
 fetch/sweep methods for workers; never expose them directly to model arguments or HTTP.

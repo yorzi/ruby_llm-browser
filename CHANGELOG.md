@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Opt-in `Rails.result_delivery` receives a sanitized `Result` and its operation
+  after execution and cleanup. Hosts own persistence, authorization and recovery.
+- `Rails::ResultDeliveryError` reports failed delivery with retained in-process
+  operation/result objects. Callback errors do not leak through exception causes.
+
+### Fixed
+
+- Suppress result delivery from cancelled or fenced workers. A delivery failure
+  preserves session state; duplicate jobs never repeat browser work or delivery.
+
 ## [0.2.0] - 2026-10-19
 
 ### Added
