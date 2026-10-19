@@ -50,3 +50,6 @@ does not click or submit forms.
 * [Getting Started]({% link _getting_started/getting-started.md %}) - install and run the offline example.
 * [Configuration]({% link _getting_started/configuration.md %}) - choose host-owned defaults.
 * [API and configuration reference]({% link _reference/api-reference.md %}) - see options, statuses, and result fields.
+
+Read [Rails Result Delivery]({% link _advanced/result-delivery.md %}) to persist a
+background result in host storage and recover delivery separately from session cleanup.

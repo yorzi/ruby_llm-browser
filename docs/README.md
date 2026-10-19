@@ -8,6 +8,7 @@ the gem.
 - [Getting started](_getting_started/getting-started.md): installation and an offline example.
 - [Configuration](_getting_started/configuration.md): host inputs and process defaults.
 - [Inspect and Extract](_core_features/inspect-extract.md): tools and result handling.
+- [Rails result delivery](_advanced/result-delivery.md): host storage, access checks, and delivery recovery.
 - [Rails jobs and recovery](_advanced/rails-integration.md): installation, workers, and cleanup.
 - [API and configuration reference](_reference/api-and-configuration.md): parameters and errors.
 - [Security model](SECURITY_MODEL.md): guarantees and limits.

@@ -19,8 +19,8 @@ After reading this guide, you will know:
 
 ## Rails Result Delivery
 
-This is an unreleased development candidate. Register a host callback to receive each
-eligible job's sanitized `Result` after execution and cleanup:
+Register a host callback to receive each eligible job's sanitized `Result` after
+execution and cleanup:
 
 ```ruby
 RubyLLM::Browser::Rails.result_delivery = lambda do |operation:, result:|

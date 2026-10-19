@@ -1,7 +1,8 @@
 ---
 layout: default
 title: What's New in 0.2
-nav_order: 5
+parent: Release History
+nav_order: 1
 description: Use the read-only tool factory and backend-aware diagnostics in this release.
 ---
 

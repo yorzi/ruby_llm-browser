@@ -2,7 +2,7 @@
 layout: default
 title: Upgrading
 nav_order: 2
-description: Upgrade from 0.1.0 while preserving tool registration, diagnostics, and operation data.
+description: Upgrade from 0.2.0 while preserving operation data and configuring optional Rails result delivery.
 ---
 
 # {{ page.title }}
@@ -11,31 +11,11 @@ description: Upgrade from 0.1.0 while preserving tool registration, diagnostics,
 
 After reading this guide, you will know:
 
-- How to update an application from 0.1.0.
-- Which tool and diagnostic contracts remain compatible.
-- How to preserve data from earlier development snapshots.
+- How to update an application from 0.2.0.
+- How to preserve existing data and enable result delivery.
+- Which result and worker behaviors change.
 
 ## Upgrade from 0.2.0
-
-The 0.3 development candidate adds no gem-managed database migration. Preserve all
-operation, approval, and actor-lock rows. Do not rerun the install generator on an
-existing installation. Result storage belongs to your application.
-
-`Rails.result_delivery` defaults to `nil`. Existing job return values remain supported.
-A worker fenced during browser execution now returns `:fenced_out` and cannot deliver
-its stale result. Cancelled work never invokes the delivery hook, including while
-cleanup remains pending. To opt in, follow
-[Rails Result Delivery]({% link _advanced/result-delivery.md %}).
-
-`Result` now also copies and freezes operation ID, error code and error message strings,
-consistent with its other fields. Mutating these attributes raises `FrozenError`;
-duplicate a string before changing it in host code. Caller-owned inputs stay mutable.
-
-A callback failure raises `Rails::ResultDeliveryError`. Queue retries do not redeliver
-a result. Configure host persistence and recovery before enabling the callback; the
-retained error object is not durable storage. Stagehand remains unsupported.
-
-## Upgrade from 0.1.0
 
 Update your Gemfile and bundle:
 
@@ -47,38 +27,41 @@ gem "ruby_llm-browser", "~> {{ site.version }}"
 bundle update ruby_llm-browser
 ```
 
-There is no database migration or new runtime dependency. Keep existing operation and
-approval records. The individual Inspect and Extract constructors remain supported.
-You can optionally replace their registration with:
+This release adds no gem-managed database migration or runtime dependency. Preserve all
+operation, approval, and actor-lock rows. Do not rerun the install generator on an
+existing installation. Result storage belongs to your application.
 
-```ruby
-chat.with_tools(*RubyLLM::Browser.tools(context: context, schema: schema))
-```
+## Enable Result Delivery When Needed
 
-The host still supplies the context and extraction schema. The factory never adds Act.
+`RubyLLM::Browser::Rails.result_delivery` defaults to `nil`. Existing job return values
+remain supported. To retain results after a worker exits, follow
+[Rails Result Delivery]({% link _advanced/result-delivery.md %}). Configure persistence,
+authorized reads, idempotent writes, and recovery before enabling the callback.
 
-## Read Doctor Reports by Name
+A callback failure raises `Rails::ResultDeliveryError`. Queue retries do not redeliver
+a result. The error retains the result only in process; it is not durable storage.
+Recover delivery separately from browser execution. A crash before host persistence
+can still lose the result, so do not treat this hook as guaranteed delivery.
 
-Doctor adds `mode` while retaining `ok`, `summary`, and `checks`. Check names now depend
-on the backend. Do not require Stagehand or credential checks in every report, and do
-not rely on check order. FakeBackend diagnostics skip provider environment and SDK
-checks. Stagehand still reports a failure; `mode: :live` does not enable it.
+## Account for Immutable Results and Fenced Workers
 
-Read [Checking Configuration]({% link _core_features/diagnostics.md %}) for the report
-fields. No live browser provider is supported by this release.
+`Result` now also copies and freezes operation ID, error code and error message strings,
+consistent with its other fields. Mutating these attributes raises `FrozenError`;
+duplicate a string before changing it in host code. Caller-owned inputs stay mutable.
 
-## Earlier Development Snapshots
+A worker fenced during browser execution now returns `:fenced_out` and cannot deliver
+its stale result. Cancelled work never invokes the delivery hook, including while
+cleanup remains pending. Delivery failures do not change the session state or free
+quota. Stagehand and live Act remain unsupported.
 
-If you used an earlier development Rails generator, preserve operation data and follow
-the additive migration instructions in the
-[Rails guide]({% link _advanced/rails-integration.md %}). Drain workers during migration;
-do not reuse idempotency keys for legacy rows without request digests.
+## Earlier Versions
 
-For the previous version's instructions, read the
-[0.1.0 upgrading guide](https://github.com/yorzi/ruby_llm-browser/blob/v0.1.0/docs/_reference/upgrading.md).
+For upgrades from 0.1.0 and earlier development snapshots, first follow the
+[0.2.0 upgrading guide](https://github.com/yorzi/ruby_llm-browser/blob/v0.2.0/docs/_reference/upgrading.md).
+Preserve operation data and use additive migrations where required.
 
 ## Next Steps
 
-- Read [What's New in 0.2]({% link _getting_started/whats-new-in-0-2.md %}).
+- Read [What's New in 0.3]({% link _getting_started/whats-new-in-0-3.md %}).
 - Review [release history]({% link _reference/release-history.md %}) and
   [live-backend qualification]({% link _advanced/live-backend-qualification.md %}).

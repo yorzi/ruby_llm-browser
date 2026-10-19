@@ -107,7 +107,7 @@ code_language: ruby
 # Values that change between releases. Pages read them as {{ site.version }}
 # and {{ site.examples.NAME }}. Candidates remain unreleased; the docs builder
 # reads stable docs from the latest release tag and main under /next/.
-released: false
+released: true
 version: "0.3.0"
-stable_version: "0.2.0"
+stable_version: "0.3.0"
 examples: {}

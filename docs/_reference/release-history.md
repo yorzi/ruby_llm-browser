@@ -18,7 +18,8 @@ release notes to identify the exact source for this version.
 
 | Release | Date | Highlights |
 | --- | --- | --- |
-| [0.2.0]({% link _getting_started/whats-new-in-0-2.md %}) | 2026-10-19 | Read-only tool factory, backend-aware Doctor, and agent development/browser verification |
+| [0.3.0]({% link _getting_started/whats-new-in-0-3.md %}) | 2026-10-19 | Opt-in Rails result delivery, durable host example, recovery and upgrade verification |
+| [0.2.0]({% link _reference/whats-new-in-0-2.md %}) | 2026-10-19 | Read-only tool factory, backend-aware Doctor, and agent development/browser verification |
 | [0.1.0](https://github.com/yorzi/ruby_llm-browser/releases/tag/v0.1.0) | 2026-10-18 | Offline read-only Inspect and Extract, Rails adapter, and Act simulation; live Stagehand and live Act are unsupported |
 
 For changes to existing applications, follow [Upgrading]({% link _reference/upgrading.md %}).

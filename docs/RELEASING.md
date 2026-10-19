@@ -17,6 +17,10 @@ After reading this guide, you will know:
 
 ## Compatibility evidence
 
+The source repository's `docs/evidence/V0_3_VALIDATION.md` records local 0.3.0 checks.
+`docs/evidence/V0_3_RELEASE.md` records the exact remote CI, published artifact and
+hosted documentation results. The earlier audit below is historical evidence.
+
 The 2026-10-18 audit runs on Ruby **3.3.5**, arm64 macOS, with Stagehand **3.21.0**,
 JSONSchemer **2.5.0**, and sqlite3 **2.10.0**. Full offline suites cover:
 
@@ -115,12 +119,12 @@ section and run `bin/verify-release` without that flag. The tag workflow require
 released metadata; local candidate verification cannot enable publication.
 
 Run the checks above, review the package contents and push the completed commit to
-`main`. Then create and push a matching tag, for example `v0.2.0` for gem version
-`0.2.0`:
+`main`. Then create and push a matching tag, for example `v{{ site.version }}` for gem version
+`{{ site.version }}`:
 
 ```bash
-git tag -a v0.2.0 -m "Release 0.2.0"
-git push origin v0.2.0
+git tag -a v{{ site.version }} -m "Release {{ site.version }}"
+git push origin v{{ site.version }}
 ```
 
 The `Release Gem` workflow rejects a tag that does not match both the gem and docs
