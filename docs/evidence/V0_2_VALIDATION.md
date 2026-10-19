@@ -1,5 +1,8 @@
 # 0.2.0 local candidate validation
 
+This is the historical snapshot before publication. See [release verification](V0_2_RELEASE.md)
+for the later remote CI, publication, artifact checksum, and stable documentation results.
+
 2026-10-19 (Asia/Shanghai). Candidate source: `1222b71`. Implementation commits:
 `d14df49` (verification foundation), `3705c6e` (tool factory), `d1069a9` (Doctor),
 `1222b71` (candidate/package checks). Andy authorized local development and incremental
