@@ -3,10 +3,24 @@
 require "spec_helper"
 require "open3"
 require "uri"
+require "tmpdir"
+require "yaml"
+require "rubygems/package"
 
 RSpec.describe "documentation and package contents" do
   let(:root) { File.expand_path("../..", __dir__) }
   let(:package) { Gem::Specification.load(File.join(root, "ruby_llm-browser.gemspec")) }
+
+  it "includes the hosted documentation link in the built gem metadata" do
+    Dir.mktmpdir("browser-documentation-metadata-") do |directory|
+      artifact = File.join(directory, "ruby_llm-browser.gem")
+      Gem::Package.build(package, false, false, artifact)
+      published_specification = Gem::Package.new(artifact).spec
+      documentation_url = YAML.load_file(File.join(root, "docs/_config.yml")).fetch("url")
+
+      expect(published_specification.metadata["documentation_uri"]).to eq(documentation_url)
+    end
+  end
 
   it "ships every public guide, example, migration template and required notice" do
     expected = %w[

@@ -80,6 +80,7 @@ inventory are retained in the temporary evidence directory printed by the comman
 Verify all of the following:
 
 - Core require loads no Rails, Active Record, Active Job, or Stagehand client.
+- The built gem's `documentation_uri` points to the hosted documentation site.
 - The optional Rails require loads on demand.
 - The generated migration and all README-linked guides are shipped.
 - All shipped examples run using the installed artifact.
