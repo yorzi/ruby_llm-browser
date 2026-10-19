@@ -12,9 +12,14 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   after execution and cleanup. Hosts own persistence, authorization and recovery.
 - `Rails::ResultDeliveryError` reports failed delivery with retained in-process
   operation/result objects. Callback errors do not leak through exception causes.
+- A runnable host-owned SQLite result store and separate-process Active Job example,
+  with scoped reads, idempotent writes, failure recovery and worker-crash tests.
+- Upgrade coverage against the frozen 0.2.0 migration with existing records retained.
 
 ### Fixed
 
+- Copy and freeze `Result` identity and error strings so constructor-input mutation
+  cannot alter a retained result. Mutating these result attributes raises `FrozenError`.
 - Suppress result delivery from cancelled or fenced workers. A delivery failure
   preserves session state; duplicate jobs never repeat browser work or delivery.
 

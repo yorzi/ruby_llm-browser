@@ -45,6 +45,23 @@ raise an exception if persistence fails.
 
 ## Keep Storage and Access in the Host
 
+Run the disposable, offline host example:
+
+```sh
+bundle exec ruby examples/rails_results.rb
+# RESULT_AFTER_WORKER_EXIT_PASS
+# SCOPED_READS_PASS
+# IDEMPOTENT_WRITE_PASS
+```
+
+It writes a serialized Active Job to a temporary file, executes it in a separate
+worker, waits for exit, and reads the schema-checked extraction from SQLite. Repeating
+the job in another worker starts no browser session. The example's host table accepts
+identical repeated writes and rejects conflicting bodies or actor/run identities.
+Its file queue holds one job and is for demonstration; use a durable queue in your
+application. The temporary database and queue file are removed on completion. Read
+[the example source](https://github.com/yorzi/ruby_llm-browser/blob/main/examples/rails_results.rb).
+
 Use a unique operation ID for idempotent writes. Repeating a write of the same result
 should succeed; reject a conflicting body or actor/run identity. Retrieve with the
 authenticated actor and run in the database query. Never use model-supplied actor IDs

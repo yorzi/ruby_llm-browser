@@ -27,6 +27,10 @@ its stale result. Cancelled work never invokes the delivery hook, including whil
 cleanup remains pending. To opt in, follow
 [Rails Result Delivery]({% link _advanced/result-delivery.md %}).
 
+`Result` now also copies and freezes operation ID, error code and error message strings,
+consistent with its other fields. Mutating these attributes raises `FrozenError`;
+duplicate a string before changing it in host code. Caller-owned inputs stay mutable.
+
 A callback failure raises `Rails::ResultDeliveryError`. Queue retries do not redeliver
 a result. Configure host persistence and recovery before enabling the callback; the
 retained error object is not durable storage. Stagehand remains unsupported.

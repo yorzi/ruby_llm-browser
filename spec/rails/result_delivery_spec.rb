@@ -138,6 +138,20 @@ RSpec.describe RubyLLM::Browser::Rails do
         expect(deliveries.length).to eq(1)
         expect(backend.call_count(:start)).to eq(1)
       end
+
+      it "keeps the same state and quota when host delivery fails" do
+        adapter.result_delivery = ->(**) { raise "host storage failed" }
+        operation = enqueue
+        expect { perform(operation) }.to raise_error(adapter::ResultDeliveryError) do |error|
+          expect(error.result.status).to eq(result_status)
+          expect(error.operation.state).to eq(state)
+        end
+        current = rails_store.fetch(operation.id)
+        expect(current.state).to eq(state)
+        expect(rails_store.open_for(operation.actor_id).map(&:id)).to eq(state == :closed ? [] : [ operation.id ])
+        expect(perform(operation)).to eq(state == :closed ? :terminal : :attached)
+        expect(backend.call_count(:start)).to eq(1)
+      end
     end
   end
 

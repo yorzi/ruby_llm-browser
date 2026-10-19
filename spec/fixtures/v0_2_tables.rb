@@ -1,0 +1,61 @@
+# frozen_string_literal: true
+
+# Frozen v0.2.0 baseline (6a5327a), rendered for Rails 8.0 compatibility.
+# Durable tables for the RubyLLM::Browser Rails adapter.
+#
+# These tables hold only Gem-owned bookkeeping: operation identity/lifecycle and
+# single-use approvals. They are not business truth and must not be edited by hand.
+class CreateRubyLlmBrowserTables < ActiveRecord::Migration[8.0]
+  def change
+    create_table :ruby_llm_browser_actors, id: :string do |t|
+      t.integer :sequence, null: false, default: 0
+    end
+
+    create_table :ruby_llm_browser_operations, id: false do |t|
+      t.string :id, null: false, primary_key: true
+      t.string :actor_id, null: false
+      t.string :run_id, null: false
+      t.string :state, null: false
+      t.string :session_id
+      t.string :idempotency_key
+      t.string :request_digest
+      t.integer :steps, null: false, default: 0
+      t.integer :bytes, null: false, default: 0
+      t.integer :fence, null: false, default: 0
+      t.string :error_code
+      t.boolean :cancel_requested, null: false, default: false
+      t.text :budget, null: false
+      t.datetime :created_at
+      t.datetime :updated_at
+    end
+
+    add_index :ruby_llm_browser_operations, [ :actor_id, :run_id, :idempotency_key ],
+              unique: true, name: "index_ruby_llm_browser_operations_on_idempotency",
+              where: "idempotency_key IS NOT NULL"
+    add_index :ruby_llm_browser_operations, [ :actor_id, :state ],
+              name: "index_ruby_llm_browser_operations_on_actor_state"
+    add_index :ruby_llm_browser_operations, :state,
+              name: "index_ruby_llm_browser_operations_on_state"
+
+    create_table :ruby_llm_browser_approvals, id: false do |t|
+      t.string :id, null: false, primary_key: true
+      t.string :actor_id, null: false
+      t.string :run_id, null: false
+      t.string :url, null: false
+      t.string :action_digest, null: false
+      t.text :action
+      t.string :page_revision
+      t.string :operation_id
+      t.string :session_id
+      t.datetime :issued_at, null: false
+      t.datetime :expires_at, null: false
+      t.datetime :consumed_at
+      t.boolean :revoked, null: false, default: false
+      t.datetime :created_at
+      t.datetime :updated_at
+    end
+
+    add_index :ruby_llm_browser_approvals, [ :actor_id, :run_id ],
+              name: "index_ruby_llm_browser_approvals_on_actor_run"
+  end
+end

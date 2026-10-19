@@ -13,10 +13,10 @@ RSpec.describe "documentation and package contents" do
       README.md CHANGELOG.md LICENSE.txt NOTICE.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md
       docs/README.md docs/API.md docs/RAILS.md docs/SECURITY_MODEL.md docs/RELEASING.md
       docs/_reference/api-and-configuration.md docs/_reference/roadmap.md
-      docs/_advanced/rails-integration.md
+      docs/_advanced/rails-integration.md docs/_advanced/result-delivery.md
       docs/_core_features/diagnostics.md docs/_getting_started/whats-new-in-0-2.md
       docs/RELEASE_AUDIT.md docs/WORK.md docs/SPEC_BASELINE.md
-      examples/plain_ruby.rb examples/rails_adapter.rb
+      examples/plain_ruby.rb examples/rails_adapter.rb examples/rails_results.rb
       lib/generators/ruby_llm/browser/templates/create_ruby_llm_browser_tables.rb.tt
     ]
     expect(package.files).to include(*expected)

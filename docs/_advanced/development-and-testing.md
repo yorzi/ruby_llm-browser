@@ -28,6 +28,13 @@ the RubyLLM 2.0 and Rails 8.0 alternate bundles, and the plain-Ruby and Rails ex
 Install each alternate bundle first if needed. Database suites run sequentially.
 RuboCop uses the writable `tmp/rubocop` cache. Default tests block unmocked HTTP.
 
+The Rails result suite executes serialized jobs in separate processes against temporary
+SQLite files. It verifies reads after worker exit, actor/run isolation, conflicting
+delivery rejection, persistence failures before and after commit, and the crash gap
+between browser execution and host storage. HTTP stays blocked in those subprocesses.
+A frozen 0.2.0 migration verifies preservation of existing rows and indexes. These
+checks exercise host result delivery without adding a second browser fixture.
+
 Commit each completed change with its docs and checks. Keep the next work item in the
 [roadmap]({% link _reference/roadmap.md %}); do not create a second task ledger.
 

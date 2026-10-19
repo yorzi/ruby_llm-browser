@@ -46,7 +46,8 @@ verification = lambda do
     gem_path = File.realpath(specification.full_gem_path)
     raise "activated outside the isolated GEM_HOME" unless gem_path.start_with?("#{gem_home}#{File::SEPARATOR}")
     %w[docs/_reference/api-and-configuration.md docs/_advanced/rails-integration.md
-       docs/_core_features/diagnostics.md docs/RELEASE_AUDIT.md examples/plain_ruby.rb].each do |path|
+       docs/_core_features/diagnostics.md docs/_advanced/result-delivery.md
+       docs/RELEASE_AUDIT.md examples/plain_ruby.rb examples/rails_results.rb].each do |path|
       raise "missing #{path}" unless File.file?(File.join(specification.full_gem_path, path))
     end
     raise "development fixture packaged" unless specification.files.grep(%r{\A(?:dev|test|spec|gemfiles|tmp)/}).empty?
@@ -75,6 +76,8 @@ verification = lambda do
       require "rails/generators"
       specification = Gem.loaded_specs.fetch("ruby_llm-browser")
       load File.join(specification.full_gem_path, "examples/rails_adapter.rb")
+      load File.join(specification.full_gem_path, "examples/rails_results.rb")
+      BrowserResultsExample.run_demo
       generator = ::Rails::Generators.find_by_namespace("ruby_llm:browser:install")
       raise "generator not discoverable" unless generator
       generated = File.join(ENV.fetch("GEM_HOME"), "generated")

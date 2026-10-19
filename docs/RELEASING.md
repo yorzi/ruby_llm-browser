@@ -40,6 +40,7 @@ bundle exec rake
 bundle exec bundle-audit check --update
 bundle exec ruby examples/plain_ruby.rb
 bundle exec ruby examples/rails_adapter.rb
+bundle exec ruby examples/rails_results.rb
 
 BUNDLE_GEMFILE=gemfiles/ruby_llm_2_0.gemfile bundle install
 BUNDLE_GEMFILE=gemfiles/ruby_llm_2_0.gemfile bundle exec rspec
@@ -77,10 +78,10 @@ Verify all of the following:
 - Core require loads no Rails, Active Record, Active Job, or Stagehand client.
 - The optional Rails require loads on demand.
 - The generated migration and all README-linked guides are shipped.
-- Both examples run using the installed artifact.
+- All shipped examples run using the installed artifact.
 - The artifact contains no keys, cookies, dumps, databases, lockfiles, or test fixtures.
 - Dependency/license inventory and known-advisory check match the resolved versions.
-- Record the artifact SHA-256, exact versions, commands and date in the WORK ledger.
+- Record the artifact SHA-256, exact versions, commands and date in the candidate validation note.
 
 ## Release boundaries
 

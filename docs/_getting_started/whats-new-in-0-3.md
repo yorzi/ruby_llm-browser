@@ -30,6 +30,10 @@ Your application supplies `BrowserResults`, storage, access checks, retention, a
 idempotent recovery. The gem adds no database tables or runtime dependencies. Read
 [Rails Result Delivery]({% link _advanced/result-delivery.md %}) for the contract.
 
+Run `bundle exec ruby examples/rails_results.rb` for a disposable SQLite host example.
+It executes a serialized job in a separate process, waits for the worker to exit,
+then verifies result retrieval, actor/run isolation, and idempotent persistence.
+
 ## Delivery Failure Is Separate from Cleanup
 
 A callback failure raises `Rails::ResultDeliveryError` with the retained operation and

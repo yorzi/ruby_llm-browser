@@ -27,15 +27,15 @@ module RubyLLM
       def initialize(status:, operation_id: nil, final_url: nil, captured_at: nil, locator: nil,
                      digest: nil, data: nil, truncated: false, error_code: nil, error_message: nil)
         @status = normalize_status(status)
-        @operation_id = operation_id
+        @operation_id = Immutable.copy(operation_id)
         @final_url = Immutable.copy(final_url)
         @captured_at = Immutable.copy(captured_at)
         @locator = Immutable.copy(locator)
         @digest = Immutable.copy(digest)
         @data = Immutable.copy(data)
         @truncated = truncated ? true : false
-        @error_code = error_code
-        @error_message = error_message
+        @error_code = Immutable.copy(error_code)
+        @error_message = Immutable.copy(error_message)
         freeze
       end
 

@@ -95,6 +95,10 @@ or redacted field need not retain the original schema's type. Always check the s
 
 ## Results and errors
 
+`Result` copies and freezes its strings and nested data. This includes operation ID,
+error code and error message; changes to constructor inputs cannot alter a retained
+result. Duplicate a returned string if host code needs to edit it.
+
 `Result#to_h` contains symbol keys: `status`, `operation_id`, `final_url`,
 `captured_at` (UTC ISO 8601), `locator`, `digest`, `truncated`, `data`, and optional
 `error: { code:, message: }`. Locator/data objects use string keys. JSON encodes all
@@ -182,11 +186,6 @@ is deferred to a later version. The Engine refuses all non-fake Act calls before
 a session. Selector/description keyword filters are defense in depth, not semantic proof
 that a click is harmless. The Stagehand adapter does not support Act in this release.
 
-## Next steps
-
-- Read [Rails integration]({% link _advanced/rails-integration.md %}) for durable workers and recovery.
-- Read [security boundaries]({% link SECURITY_MODEL.md %}) before qualifying a live backend.
-
 ## Rails Result Delivery
 
 After `require "ruby_llm/browser/rails"`, set `Rails.result_delivery` to a callable
@@ -197,3 +196,8 @@ which exposes `operation` and `result` to trusted recovery code. These objects a
 not automatically persisted. Duplicate browser jobs do not retry delivery. Read
 [Rails Result Delivery]({% link _advanced/result-delivery.md %}) for storage, access,
 cancellation, and crash boundaries.
+
+## Next steps
+
+- Read [Rails integration]({% link _advanced/rails-integration.md %}) for durable workers and recovery.
+- Read [security boundaries]({% link SECURITY_MODEL.md %}) before qualifying a live backend.

@@ -46,6 +46,7 @@ jobs:
         run: |
           bundle exec ruby examples/plain_ruby.rb
           bundle exec ruby examples/rails_adapter.rb
+          bundle exec ruby examples/rails_results.rb
 
   browser:
     name: Offline Chrome workflows

@@ -43,6 +43,20 @@ RSpec.describe RubyLLM::Browser::Result do
     expect { described_class.new(status: :exploded) }.to raise_error(RubyLLM::Browser::InvalidInput)
   end
 
+  it "copies and freezes failure identity and error strings retained for delivery" do
+    id, code, message = %w[op-1 PROVIDER_ERROR safe].map(&:dup)
+    result = described_class.failure(:error, operation_id: id, error_code: code, message: message)
+    id.replace("different")
+    code.replace("different")
+    message.replace("changed")
+
+    expect(result.to_h).to include(operation_id: "op-1", error: { code: "PROVIDER_ERROR", message: "safe" })
+    expect([ id, code, message ]).not_to include(be_frozen)
+    expect { result.error_message.replace("changed") }.to raise_error(FrozenError)
+    expect { result.operation_id.replace("changed") }.to raise_error(FrozenError)
+    expect { result.error_code.replace("changed") }.to raise_error(FrozenError)
+  end
+
   it "destructures as its model-safe hash" do
     result = described_class.ok(data: { "x" => 1 })
     expect(result.deconstruct_keys(nil)).to eq(result.to_h)
