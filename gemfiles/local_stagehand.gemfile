@@ -1,0 +1,5 @@
+# frozen_string_literal: true
+
+# Pin feasibility checks separately from the supported runtime dependency range.
+eval_gemfile "browser.gemfile"
+gem "stagehand", "= 3.21.0"

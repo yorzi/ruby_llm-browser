@@ -4,12 +4,16 @@
 require "fileutils"
 require "rbconfig"
 $stdout.sync = true
+abort "Usage: bin/check-browser [--network]" unless (ARGV - [ "--network" ]).empty?
 root = File.expand_path("..", __dir__)
 artifacts = File.join(root, "tmp/browser", "#{Time.now.utc.strftime('%Y%m%dT%H%M%S')}-#{Process.pid}")
 FileUtils.mkdir_p(artifacts)
 puts "Browser artifacts: #{artifacts}"
 env = { "BUNDLE_GEMFILE" => File.join(root, "gemfiles/browser.gemfile"),
-        "BROWSER_TEST" => "1", "BROWSER_ARTIFACTS" => artifacts }
+        "BROWSER_TEST" => "1", "BROWSER_ARTIFACTS" => artifacts,
+        "NETWORK_PROBE_TEST" => ARGV.include?("--network") ? "1" : "0" }
+paths = [ "test/browser" ]
+paths << "test/network" if ARGV.include?("--network")
 abort "Browser checks failed; inspect #{artifacts}" unless system(env, "bundle", "exec", RbConfig.ruby,
-                                                                 "-S", "rspec", "test/browser", chdir: root)
+                                                                 "-S", "rspec", *paths, chdir: root)
 abort "Browser checks produced no screenshots" if Dir[File.join(artifacts, "*.png")].empty?

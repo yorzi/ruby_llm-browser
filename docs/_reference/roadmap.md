@@ -108,6 +108,13 @@ Prepare the fixtures and opt-in qualification runner offline first. Live runs re
 separate owner authorization for the deployment, data, and spending. Keep default CI
 offline. Report provider billing controls separately from the advisory cost field.
 
+The selected target is a pinned local Stagehand deployment with a host-controlled
+browser network. The development branch now has executable checksum checks, local SDK
+HTTP contracts, and calibrated loopback browser canaries. See
+[Local Stagehand feasibility]({% link _advanced/local-stagehand-deployment.md %}). These
+are offline foundations. The browser namespace, egress gateway, independent lifecycle
+supervisor, server artifact compatibility, and live acceptance remain incomplete.
+
 If the deployment cannot meet the required controls, stop this milestone and record
 the gap. Keep live support disabled. Do not replace qualification with a boolean flag
 or promote an offline-only package to 1.0 under this plan.

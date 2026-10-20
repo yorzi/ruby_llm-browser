@@ -16,7 +16,7 @@ module LoopbackPortProbe
 end
 Selenium::WebDriver::PortProber.singleton_class.prepend(LoopbackPortProbe)
 WebMock.disable_net_connect!(allow_localhost: true)
-Capybara.app = BrowserWorkbench.new
+Capybara.app = BrowserWorkbench.new(enable_network_probes: ENV["NETWORK_PROBE_TEST"] == "1")
 Capybara.server = :puma, { Silent: true }
 Capybara.server_host = "127.0.0.1"
 Capybara.default_max_wait_time = 5

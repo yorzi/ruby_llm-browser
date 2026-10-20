@@ -59,13 +59,15 @@ jobs:
         with:
           ruby-version: "3.3"
           bundler-cache: true
-      - run: bin/check-browser
-      - name: Retain fixture screenshots
+      - run: bin/check-browser --network
+      - name: Retain fixture screenshots and canary receipts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-screenshots
-          path: tmp/browser/**/*.png
+          path: |
+            tmp/browser/**/*.png
+            tmp/browser/**/*.json
           retention-days: 7
           if-no-files-found: ignore
 

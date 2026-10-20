@@ -75,5 +75,6 @@ requests, and returned page text remains untrusted data. Review the [security mo
 
 ## Next Steps
 
+* [Local Stagehand feasibility]({% link _advanced/local-stagehand-deployment.md %}) - run pinned SDK contracts and loopback canaries without a provider.
 * [Controlling source access]({% link _core_features/source-policy.md %}) - set host URL policy.
 * [Running work in Rails]({% link _advanced/rails-integration.md %}) - protect durable jobs and recovery.

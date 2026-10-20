@@ -61,7 +61,9 @@ credentials. The fixture and browser libraries are excluded from the gem.
 
 ```sh
 bin/check-browser
-# Or include browser tests after the offline checks:
+# Include the optional loopback network canaries:
+bin/check-browser --network
+# Include all browser tests after the offline checks:
 bin/check --browser
 ```
 
@@ -74,6 +76,14 @@ Browser scenarios cover inspect/extract, denial before dispatch, keyboard recove
 a 390px device viewport, and offline/blocked-Stagehand Doctor output. Capture screenshots before closing the
 active session, including on assertion failures. Inspect failure artifacts before
 retrying. Screenshots support visual review; assertions establish the expected behavior.
+
+`--network` adds same-origin and cross-origin canaries, partial image denial on mobile,
+and independent redirected-URL checks. CI and `bin/check --browser` include this option.
+The opt-in `bin/check-local-stagehand` runner also pins the SDK feasibility bundle and
+runs its HTTP contracts without starting Stagehand. See
+[Local Stagehand feasibility]({% link _advanced/local-stagehand-deployment.md %}) for
+request coverage and the remaining deployment gaps. Canary receipts and screenshots
+are review evidence; they do not qualify network isolation.
 
 The Puma host and Selenium port probe bind loopback. Browser test HTTP clients allow
 loopback only; this is not a Chrome network firewall. No live provider request is part

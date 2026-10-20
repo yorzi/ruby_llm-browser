@@ -18,7 +18,7 @@ run.call("bundle", "exec", "rake")
   abort "#{name} failed" unless system({ "BUNDLE_GEMFILE" => "gemfiles/#{name}.gemfile" }, "bundle", "exec", "rspec")
 end
 %w[plain_ruby rails_adapter rails_results].each { |name| run.call("bundle", "exec", "ruby", "examples/#{name}.rb") }
-run.call(RbConfig.ruby, "bin/check-browser") if ARGV.include?("--browser")
+run.call(RbConfig.ruby, "bin/check-browser", "--network") if ARGV.include?("--browser")
 if ARGV.include?("--package")
   flags = YAML.load_file("docs/_config.yml").fetch("released") ? [] : [ "--candidate" ]
   run.call(RbConfig.ruby, "bin/verify-release", *flags)

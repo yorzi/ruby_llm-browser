@@ -13,13 +13,20 @@ class BrowserWorkbench
   RESOLVER = Object.new
   def RESOLVER.getaddresses(_host) = [ "93.184.216.34" ]
 
-  def initialize
+  attr_reader :network_probe
+
+  def initialize(enable_network_probes: false)
     @token = SecureRandom.hex(32)
+    if enable_network_probes
+      require_relative "network_probe"
+      @network_probe = NetworkProbe.new
+    end
   end
 
   def call(env)
     request = Rack::Request.new(env)
     return response(403, "Loopback only") unless %w[127.0.0.1 localhost ::1].include?(request.host)
+    return network_probe.call(request) if network_probe && request.path.start_with?("/network-probe/")
     return response(404, "Not found") unless request.path == "/"
     return response(405, "Method not allowed") unless %w[GET POST].include?(request.request_method)
 

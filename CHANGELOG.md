@@ -6,6 +6,15 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Pinned local Stagehand SDK feasibility contracts and `bin/check-local-stagehand`.
+  The runner starts no Stagehand server and makes no model or provider call.
+- Opt-in workbench network canaries for redirects, fetch, images, scripts, frames,
+  popups, Worker fetch, and WebSocket upgrade requests. Chrome tests calibrate
+  unrestricted and partial-denial controls, retain screenshots and request receipts,
+  and run in offline browser CI. They do not qualify deployment isolation.
+
 ### Fixed
 
 - Require an explicit local Stagehand executable matching `server_binary_sha256`

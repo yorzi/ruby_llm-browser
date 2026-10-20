@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "rbconfig"
+$stdout.sync = true
+abort "Usage: bin/check-local-stagehand" unless ARGV.empty?
+root = File.expand_path("..", __dir__)
+artifacts = File.join(root, "tmp/local-stagehand", "#{Time.now.utc.strftime('%Y%m%dT%H%M%S')}-#{Process.pid}")
+FileUtils.mkdir_p(artifacts)
+puts "Offline fixtures only; no Stagehand server, provider call, or live qualification."
+puts "Pinned SDK: stagehand 3.21.0. Browser artifacts: #{artifacts}"
+env = { "BUNDLE_GEMFILE" => File.join(root, "gemfiles/local_stagehand.gemfile"),
+        "BROWSER_TEST" => "1", "NETWORK_PROBE_TEST" => "1", "BROWSER_ARTIFACTS" => artifacts }
+paths = %w[spec/integration/local_stagehand_spec.rb spec/security/local_stagehand_pin_spec.rb test/network]
+abort "Local Stagehand fixtures failed; inspect #{artifacts}" unless system(
+  env, "bundle", "exec", RbConfig.ruby, "-S", "rspec", *paths, chdir: root
+)
+abort "Canary calibration produced no screenshots" if Dir[File.join(artifacts, "*.png")].empty?
