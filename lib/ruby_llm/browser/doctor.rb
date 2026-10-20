@@ -98,11 +98,11 @@ module RubyLLM
         return nil unless backend&.capabilities&.local_mode?
 
         if backend.capabilities.local_binary_pinned?
-          check(:local_binary, :pass, "local mode uses a host-pinned server binary or version")
+          check(:local_binary, :pass, "local mode reports a verified host-pinned executable")
         else
           check(:local_binary, :fail,
-                "local mode has no host-pinned #{StagehandBackend::PINNED_BINARY_ENV} or " \
-                "#{StagehandBackend::PINNED_VERSION_ENV}; the SDK would download a binary")
+                "local mode requires an absolute executable #{StagehandBackend::PINNED_BINARY_ENV} " \
+                "matching server_binary_sha256 in the SDK process environment")
         end
       end
 

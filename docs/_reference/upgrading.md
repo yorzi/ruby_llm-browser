@@ -56,6 +56,18 @@ quota. Stagehand and live Act remain unsupported.
 
 ## Earlier Versions
 
+### Local Stagehand Diagnostics on the Development Branch
+
+The unreleased local adapter no longer treats `STAGEHAND_SERVER_VERSION` or an
+unchecked `STAGEHAND_SEA_BINARY` path as a binary pin. Configure an absolute executable
+path in the SDK process environment and provide `server_binary_sha256:` with its
+host-approved lowercase SHA-256. The local binary diagnostic fails for missing,
+nonexecutable, changed, or mismatched files. See
+[API and configuration]({% link _reference/api-and-configuration.md %}). Live Stagehand
+operations remain unsupported even when this diagnostic passes.
+
+### Releases Before 0.2.0
+
 For upgrades from 0.1.0 and earlier development snapshots, first follow the
 [0.2.0 upgrading guide](https://github.com/yorzi/ruby_llm-browser/blob/v0.2.0/docs/_reference/upgrading.md).
 Preserve operation data and use additive migrations where required.

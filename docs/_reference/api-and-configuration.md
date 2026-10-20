@@ -150,10 +150,24 @@ TTL, billing, final-URL reporting, or cleanup. `end_session` sends no request in
 release and returns `false`; the operation remains `cleanup_pending`.
 
 The constructor accepts `server: :remote`, `base_url:`, `timeout: 60.0`,
-`custom_headers_approved: false`, `env: ENV`, and an injected `client:` for internal
+`server_binary_sha256: nil`, `custom_headers_approved: false`, `env: ENV`, and an injected `client:` for internal
 contract tests. A future live implementation must verify all relevant environment
 settings, egress across every browser request path, TTL and closure status, and provider
 billing controls before it can advertise support.
+
+For local diagnostics, set process-level `STAGEHAND_SEA_BINARY` to an absolute path
+and supply the host-approved lowercase SHA-256 as `server_binary_sha256:`. The file
+must be a regular executable. The adapter checks its current bytes when reporting
+capabilities and before constructing the SDK client. An injected `env:` must select
+the same path as the real process environment. These checks do not execute the file.
+
+`STAGEHAND_SERVER_VERSION` alone does not establish a pin. Stagehand 3.21.0 checks
+its version-independent server cache before consulting that variable, and may download
+on a cache miss. An explicit matching executable avoids both paths. Obtain the expected
+digest through your host's artifact review; computing a digest of an untrusted file
+does not establish trust. Protect the executable and its parent directories from
+replacement during use. Hash checks do not provide filesystem isolation or make the
+unsupported adapter live-ready.
 
 ## Configuration diagnostics
 

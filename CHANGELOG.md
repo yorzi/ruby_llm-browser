@@ -8,6 +8,10 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Require an explicit local Stagehand executable matching `server_binary_sha256`
+  before reporting a binary pin or constructing a local SDK client. Version labels
+  alone can select stale cached binaries or trigger downloads in Stagehand 3.21.0.
+  Doctor rechecks the executable without starting it; live support remains disabled.
 - Set the gem's `documentation_uri` to the hosted documentation site so RubyGems
   displays its documentation link after the next release.
 

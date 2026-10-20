@@ -213,13 +213,13 @@ RSpec.describe RubyLLM::Browser::StagehandBackend do
         .egress_qualified?(local.capabilities)).to be(false)
     end
 
-    it "accepts a host-pinned server binary or version" do
+    it "does not accept unverified environment labels as a binary pin" do
       [ "STAGEHAND_SEA_BINARY", "STAGEHAND_SERVER_VERSION" ].each do |key|
         local = described_class.new(
           browserbase_api_key: "bb-secret-key-1234", model_api_key: "model-secret-key-5678",
           model_name: "openai/gpt-4o-mini", server: :local, env: { key => "pinned" }
         )
-        expect(local.capabilities.local_binary_pinned?).to be(true)
+        expect(local.capabilities.local_binary_pinned?).to be(false)
       end
     end
   end

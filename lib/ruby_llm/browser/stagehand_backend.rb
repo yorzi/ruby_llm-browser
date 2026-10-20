@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+
 module RubyLLM
   module Browser
     # An experimental {Backend} adapter for the official `stagehand` Ruby SDK.
@@ -13,8 +15,8 @@ module RubyLLM
     #   the SDK otherwise retries errors and timeouts
     # - never returns `cdp_url`, cookies or credentials, and reports the pinned API keys
     #   as secret literals so they are scrubbed from page text and results
-    # - refuses to construct a live client in local mode unless a host-pinned server
-    #   binary or version is present, so it never triggers the SDK's runtime download
+    # - refuses to construct a client in local mode unless an explicit executable
+    #   matches the host's SHA-256, avoiding the SDK's download and version cache
     #
     # The SDK is required lazily, inside {#client}, so requiring this Gem never reads
     # Stagehand environment variables and never starts or downloads a server.
@@ -38,13 +40,15 @@ module RubyLLM
       # @param base_url [String, nil] explicit endpoint; defaults to the official remote
       #   endpoint. Never read from the environment.
       # @param timeout [Numeric] per-request timeout in seconds
+      # @param server_binary_sha256 [String, nil] host-approved lowercase SHA-256 of
+      #   the executable selected by process-level `STAGEHAND_SEA_BINARY`
       # @param custom_headers_approved [Boolean] whether the host approved the SDK's
       #   always-merged `STAGEHAND_CUSTOM_HEADERS`
       # @param env [Hash] environment to inspect; injectable for tests
       # @param client [Object, nil] an already-built client (tests/advanced hosts)
       def initialize(browserbase_api_key:, model_api_key:, model_name:,
                      server: :remote, base_url: nil, timeout: 60.0,
-                     custom_headers_approved: false, env: ENV, client: nil)
+                     server_binary_sha256: nil, custom_headers_approved: false, env: ENV, client: nil)
         super()
         @browserbase_api_key = presence!(browserbase_api_key, :browserbase_api_key)
         @model_api_key = presence!(model_api_key, :model_api_key)
@@ -52,22 +56,14 @@ module RubyLLM
         @server = server_mode!(server)
         @base_url = base_url.nil? ? default_base_url : presence!(base_url, :base_url)
         @timeout = positive_number!(timeout, :timeout)
+        @server_binary_sha256 = checksum!(server_binary_sha256)
         @env = env
         @environment_snapshot = relevant_environment(env)
         @process_environment_snapshot = relevant_environment(ENV)
         @custom_headers_present = !env[CUSTOM_HEADERS_ENV].to_s.empty? || !ENV[CUSTOM_HEADERS_ENV].to_s.empty?
         @custom_headers_approved = !!custom_headers_approved
-        @local_binary_pinned = local? && pinned_binary?
         @client_mutex = Mutex.new
         @client = client
-        @capabilities = Capabilities.new(
-          server_mode: local? ? :local : :remote,
-          egress_isolation: :unverified,
-          local_binary_pinned: @local_binary_pinned,
-          custom_headers_present: @custom_headers_present,
-          custom_headers_approved: @custom_headers_approved,
-          act_supported: false
-        )
       end
 
       # The pinned credential literals, so the redactor scrubs them from any page text
@@ -75,10 +71,11 @@ module RubyLLM
       def secrets = [ @browserbase_api_key, @model_api_key ]
 
       def capabilities
-        return @capabilities if environment_unchanged?
-
+        unchanged = environment_unchanged?
         Capabilities.new(server_mode: local? ? :local : :remote, egress_isolation: :unverified,
-                         custom_headers_present: true, custom_headers_approved: false,
+                         local_binary_pinned: local? && unchanged && pinned_binary?,
+                         custom_headers_present: unchanged ? @custom_headers_present : true,
+                         custom_headers_approved: unchanged && @custom_headers_approved,
                          act_supported: false)
       end
 
@@ -178,8 +175,8 @@ module RubyLLM
 
       def build_client
         raise UnsupportedSecurityCapability, "Stagehand environment changed; rebuild the backend" unless environment_unchanged?
-        if local? && ENV[PINNED_BINARY_ENV].to_s.empty? && ENV[PINNED_VERSION_ENV].to_s.empty?
-          raise UnsupportedSecurityCapability, "local mode requires a process-level server pin"
+        if local? && !pinned_binary?
+          raise UnsupportedSecurityCapability, "local mode requires an executable matching the host checksum"
         end
         require "stagehand"
         Stagehand::Client.new(
@@ -279,7 +276,24 @@ module RubyLLM
       end
 
       def pinned_binary?
-        !@env[PINNED_BINARY_ENV].to_s.empty? || !@env[PINNED_VERSION_ENV].to_s.empty?
+        return false unless @server_binary_sha256
+
+        path = @env[PINNED_BINARY_ENV].to_s
+        return false unless path.start_with?("/") && path == ENV[PINNED_BINARY_ENV]
+        return false unless File.file?(path) && File.executable?(path)
+
+        Digest::SHA256.file(path).hexdigest == @server_binary_sha256
+      rescue SystemCallError, IOError
+        false
+      end
+
+      def checksum!(value)
+        return nil if value.nil?
+        unless value.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(value)
+          raise InvalidInput, "server_binary_sha256 must be a lowercase SHA-256 digest"
+        end
+
+        value.dup.freeze
       end
 
       def default_base_url
