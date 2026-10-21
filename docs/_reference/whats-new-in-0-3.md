@@ -1,9 +1,8 @@
 ---
 layout: default
 title: What's New in 0.3
-redirect_from:
-  - /whats-new/
-nav_order: 4
+parent: Release History
+nav_order: 3
 description: Deliver Rails background results to host storage without repeating browser work on delivery failure.
 ---
 

@@ -2,7 +2,7 @@
 layout: default
 title: Upgrading
 nav_order: 2
-description: Upgrade from 0.2.0 while preserving operation data and configuring optional Rails result delivery.
+description: Upgrade from 0.3.0 and configure verified local Stagehand executable identity for offline diagnostics.
 ---
 
 # {{ page.title }}
@@ -11,11 +11,11 @@ description: Upgrade from 0.2.0 while preserving operation data and configuring 
 
 After reading this guide, you will know:
 
-- How to update an application from 0.2.0.
-- How to preserve existing data and enable result delivery.
-- Which result and worker behaviors change.
+- How to update an application from 0.3.0.
+- Why local binary diagnostics require a checksum.
+- Which existing workflows stay supported.
 
-## Upgrade from 0.2.0
+## Upgrade from 0.3.0
 
 Update your Gemfile and bundle:
 
@@ -27,53 +27,40 @@ gem "ruby_llm-browser", "~> {{ site.version }}"
 bundle update ruby_llm-browser
 ```
 
-This release adds no gem-managed database migration or runtime dependency. Preserve all
-operation, approval, and actor-lock rows. Do not rerun the install generator on an
-existing installation. Result storage belongs to your application.
+This release adds no runtime dependency or gem-managed database migration. Preserve
+all operation, approval, and actor-lock rows. Do not rerun the install generator on
+an existing installation. FakeBackend and opt-in Rails result delivery retain their
+existing contracts.
 
-## Enable Result Delivery When Needed
+## Supply Local Executable Identity
 
-`RubyLLM::Browser::Rails.result_delivery` defaults to `nil`. Existing job return values
-remain supported. To retain results after a worker exits, follow
-[Rails Result Delivery]({% link _advanced/result-delivery.md %}). Configure persistence,
-authorized reads, idempotent writes, and recovery before enabling the callback.
+The local adapter no longer treats `STAGEHAND_SERVER_VERSION` or an unchecked
+`STAGEHAND_SEA_BINARY` path as a binary pin. Configure an absolute executable path in
+the SDK process environment and pass `server_binary_sha256:` with its host-approved
+lowercase SHA-256 when constructing `StagehandBackend`.
 
-A callback failure raises `Rails::ResultDeliveryError`. Queue retries do not redeliver
-a result. The error retains the result only in process; it is not durable storage.
-Recover delivery separately from browser execution. A crash before host persistence
-can still lose the result, so do not treat this hook as guaranteed delivery.
+The local binary diagnostic fails for missing, nonexecutable, changed, or mismatched
+files. An injected `env:` must select the same path as the actual process environment.
+The adapter checks current file bytes without executing the file. Obtain the expected
+digest through your artifact review and protect the executable during use. See
+[API and configuration]({% link _reference/api-and-configuration.md %}) for the full
+contract. Remote diagnostics do not require this option.
 
-## Account for Immutable Results and Fenced Workers
-
-`Result` now also copies and freezes operation ID, error code and error message strings,
-consistent with its other fields. Mutating these attributes raises `FrozenError`;
-duplicate a string before changing it in host code. Caller-owned inputs stay mutable.
-
-A worker fenced during browser execution now returns `:fenced_out` and cannot deliver
-its stale result. Cancelled work never invokes the delivery hook, including while
-cleanup remains pending. Delivery failures do not change the session state or free
-quota. Stagehand and live Act remain unsupported.
+Stagehand remains unsupported even when the binary check passes. Do not replace the
+live qualification gate with a capability override. The new browser canaries calibrate
+offline fixtures; they do not establish production isolation or cleanup.
 
 ## Earlier Versions
 
-### Local Stagehand Diagnostics on the Development Branch
-
-The unreleased local adapter no longer treats `STAGEHAND_SERVER_VERSION` or an
-unchecked `STAGEHAND_SEA_BINARY` path as a binary pin. Configure an absolute executable
-path in the SDK process environment and provide `server_binary_sha256:` with its
-host-approved lowercase SHA-256. The local binary diagnostic fails for missing,
-nonexecutable, changed, or mismatched files. See
-[API and configuration]({% link _reference/api-and-configuration.md %}). Live Stagehand
-operations remain unsupported even when this diagnostic passes.
-
-### Releases Before 0.2.0
-
-For upgrades from 0.1.0 and earlier development snapshots, first follow the
+For upgrades from 0.2.0, first read the
+[0.3.0 upgrading guide](https://github.com/yorzi/ruby_llm-browser/blob/v0.3.0/docs/_reference/upgrading.md)
+for result delivery, immutable results, worker fencing, and delivery recovery.
+For upgrades from 0.1.0, start with the
 [0.2.0 upgrading guide](https://github.com/yorzi/ruby_llm-browser/blob/v0.2.0/docs/_reference/upgrading.md).
 Preserve operation data and use additive migrations where required.
 
 ## Next Steps
 
-- Read [What's New in 0.3]({% link _getting_started/whats-new-in-0-3.md %}).
-- Review [release history]({% link _reference/release-history.md %}) and
-  [live-backend qualification]({% link _advanced/live-backend-qualification.md %}).
+- Read [What's New in 0.4]({% link _getting_started/whats-new-in-0-4.md %}).
+- Review [local deployment feasibility]({% link _advanced/local-stagehand-deployment.md %})
+  and [release history]({% link _reference/release-history.md %}).

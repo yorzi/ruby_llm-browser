@@ -5,6 +5,8 @@ stable release. The [next-version site](https://rubyllm-browser.wangyaodi.com/ne
 follows `main`. The Markdown files below are the source for those guides and ship in
 the gem.
 
+- [What's New in 0.4](_getting_started/whats-new-in-0-4.md): the 0.4.4 offline hardening release.
+- [Local Stagehand feasibility](_advanced/local-stagehand-deployment.md): pinned SDK contracts and browser network canaries.
 - [Getting started](_getting_started/getting-started.md): installation and an offline example.
 - [Configuration](_getting_started/configuration.md): host inputs and process defaults.
 - [Inspect and Extract](_core_features/inspect-extract.md): tools and result handling.

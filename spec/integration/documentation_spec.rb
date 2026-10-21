@@ -29,7 +29,8 @@ RSpec.describe "documentation and package contents" do
       docs/_reference/api-and-configuration.md docs/_reference/roadmap.md
       docs/_advanced/rails-integration.md docs/_advanced/result-delivery.md
       docs/_core_features/diagnostics.md docs/_reference/whats-new-in-0-2.md
-      docs/_getting_started/whats-new-in-0-3.md
+      docs/_reference/whats-new-in-0-3.md docs/_getting_started/whats-new-in-0-4.md
+      docs/_advanced/local-stagehand-deployment.md
       docs/RELEASE_AUDIT.md docs/WORK.md docs/SPEC_BASELINE.md
       examples/plain_ruby.rb examples/rails_adapter.rb examples/rails_results.rb
       lib/generators/ruby_llm/browser/templates/create_ruby_llm_browser_tables.rb.tt

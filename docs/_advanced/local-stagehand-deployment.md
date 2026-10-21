@@ -13,7 +13,7 @@ After reading this guide, you will know:
 
 - How to run the local SDK contracts and browser canaries without a provider.
 - Which parts of a local deployment need separate host controls.
-- What still blocks the proposed 0.4.0 release.
+- What still blocks supported live browsing.
 
 ## Run the Offline Fixtures
 
@@ -110,7 +110,7 @@ release quota. Keep unresolved operations visible for host review.
 
 Complete these offline deployment checks before requesting a separate live run.
 Keep Stagehand and live Act disabled until the
-[0.4.0 acceptance criteria]({% link _reference/roadmap.md %}) pass.
+[live-deployment acceptance criteria]({% link _reference/roadmap.md %}) pass.
 
 ## Next Steps
 

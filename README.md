@@ -3,7 +3,7 @@
 An unofficial [RubyLLM](https://rubyllm.com) extension for read-only browser inspection
 and schema-checked extraction, with an optional Rails 8 adapter.
 
-**0.3.0 supports offline use only.** `FakeBackend` runs without credentials or network
+**0.4.4 supports offline use only.** `FakeBackend` runs without credentials or network
 requests. The experimental Stagehand adapter refuses live operations; `Act` is an
 offline simulation. This project is not maintained or endorsed by RubyLLM or Browserbase.
 
@@ -16,7 +16,7 @@ offline simulation. This project is not maintained or endorsed by RubyLLM or Bro
 Use Ruby 3.2+ and RubyLLM 2.x. Add to your Gemfile, then run `bundle install`:
 
 ```ruby
-gem "ruby_llm-browser", "~> 0.3.0"
+gem "ruby_llm-browser", "~> 0.4.4"
 ```
 
 ## Try it offline

@@ -42,14 +42,15 @@ feedback to settle the public API.
 | --- | --- | --- |
 | 0.2.0 | Easier tool setup and clearer offline diagnostics | Two additive features, tested with no provider requests |
 | 0.3.0 | Usable Rails result delivery | A host can retrieve a job's result after the worker exits |
-| 0.4.0 | One supported live read-only deployment | Egress, final URL, session expiry and cleanup qualified on that deployment |
+| 0.4.4 | Offline local Stagehand groundwork | Executable identity checks and calibrated browser fixtures |
+| Next live milestone | One supported live read-only deployment | Egress, final URL, session expiry and cleanup qualified on that deployment |
 | 0.5.0 | Pilot feedback and recovery hardening | Plain-Ruby and Rails workflows exercised outside the test suite |
 | 1.0.0-rc.1 | Stable API candidate | Feature freeze, complete upgrade instructions, candidate package verified |
 | 1.0.0 | Supported read-only integration | All acceptance criteria below pass on the release candidate |
 
 ### 0.2.0: Two Small Features
 
-Version `0.2.0` adds both features below. Milestones after 0.3 remain proposed scope. See
+Version `0.2.0` adds both features below. Live-deployment milestones remain proposed scope. See
 [What's New]({% link _reference/whats-new-in-0-2.md %}) for usage and
 [development and testing]({% link _advanced/development-and-testing.md %}) for validation.
 
@@ -75,7 +76,7 @@ validation precede the release tag and publication.
 
 Version `0.3.0` implements `Rails.result_delivery`, typed
 host-delivery failures, and a runnable SQLite host example with separate workers.
-Read [What's New in 0.3]({% link _getting_started/whats-new-in-0-3.md %}) and
+Read [What's New in 0.3]({% link _reference/whats-new-in-0-3.md %}) and
 [Rails Result Delivery]({% link _advanced/result-delivery.md %}) for the current API.
 The source repository's `docs/evidence/V0_3_VALIDATION.md` records local candidate
 checks. `docs/evidence/V0_3_RELEASE.md` records remote verification and publication.
@@ -91,7 +92,15 @@ A delivery failure must be visible and must never cause the browser operation to
 again. Document delivery semantics, duplicate handling, and recovery separately from
 the operation's session state. Verify generator upgrades preserve existing records.
 
-### 0.4.0: Qualify One Live Read-only Deployment
+### 0.4.4: Offline Local Stagehand Groundwork
+
+Version 0.4.4 includes the executable identity fix, pinned SDK contracts,
+browser canaries, and hosted documentation metadata fix. Read
+[What's New in 0.4]({% link _getting_started/whats-new-in-0-4.md %}). This release ships the offline
+foundation; the original live-deployment milestone remains open. It does not satisfy
+the live acceptance criteria below or advance the project to the pilot stage.
+
+### Next Live Milestone: Qualify One Read-only Deployment
 
 Begin with a feasibility check of the pinned SDK and a named deployment. Determine
 whether the deployment can enforce every required browser request boundary and report
@@ -109,7 +118,7 @@ separate owner authorization for the deployment, data, and spending. Keep defaul
 offline. Report provider billing controls separately from the advisory cost field.
 
 The selected target is a pinned local Stagehand deployment with a host-controlled
-browser network. The development branch now has executable checksum checks, local SDK
+browser network. Version 0.4.4 includes executable checksum checks, local SDK
 HTTP contracts, and calibrated loopback browser canaries. See
 [Local Stagehand feasibility]({% link _advanced/local-stagehand-deployment.md %}). These
 are offline foundations. The browser namespace, egress gateway, independent lifecycle

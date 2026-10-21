@@ -17,7 +17,10 @@ After reading this guide, you will know:
 
 ## Compatibility evidence
 
-The source repository's `docs/evidence/V0_3_VALIDATION.md` records local 0.3.0 checks.
+The source repository's `docs/evidence/V0_4_4_VALIDATION.md` records local 0.4.4 checks.
+The 0.4.4 release ships offline executable hardening and development fixtures;
+live-deployment qualification remains incomplete. Historical 0.3.0 checks remain in
+`docs/evidence/V0_3_VALIDATION.md`.
 `docs/evidence/V0_3_RELEASE.md` records the exact remote CI, published artifact and
 hosted documentation results. The earlier audit below is historical evidence.
 

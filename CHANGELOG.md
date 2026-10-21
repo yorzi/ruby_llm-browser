@@ -6,6 +6,8 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-21
+
 ### Added
 
 - Pinned local Stagehand SDK feasibility contracts and `bin/check-local-stagehand`.
